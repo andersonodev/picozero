@@ -1,0 +1,42 @@
+<!doctype html>
+<!-- deploy/librechat/chat-entrar.html — chat livre: entra sozinho na conta de convidado compartilhada do LibreChat.
+     O publicar.sh troca __EMAIL__ e __SENHA__ no servidor (convidado.env); o arquivo final nunca vai para o Git.
+     A senha fica visível nesta página de propósito: a conta é de todos os visitantes e não é administradora. -->
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>PicoZero · Assistente</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <style>
+      html, body { height: 100%; margin: 0; background: #0d0d0d; color: #e6e6e6; font: 15px/1.5 system-ui, sans-serif; }
+      main { height: 100%; display: grid; place-items: center; padding: 16px; text-align: center; }
+      img { width: 48px; height: 48px; }
+      a { color: #00adbb; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div>
+        <img src="/favicon.svg" alt="" />
+        <p id="estado">Entrando no assistente do PicoZero…</p>
+      </div>
+    </main>
+    <script>
+      fetch('/chat/api/auth/login', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: '__EMAIL__', password: '__SENHA__' }),
+      })
+        .then(function (r) {
+          if (!r.ok) throw new Error('HTTP ' + r.status)
+          location.replace('/chat/c/new')
+        })
+        .catch(function () {
+          document.getElementById('estado').innerHTML = 'Não consegui entrar agora. <a href="/chat/">Tentar de novo</a>'
+        })
+    </script>
+  </body>
+</html>

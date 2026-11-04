@@ -36,6 +36,7 @@ services:
     volumes:
       - ../frontend/dist:/usr/share/nginx/html:ro
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./chat-entrar.html:/usr/share/nginx/extra/chat-entrar.html:ro  # gerado pelo publicar.sh (chat livre)
     depends_on:
       picozero-api:
         condition: service_healthy

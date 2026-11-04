@@ -20,7 +20,7 @@ echo "1/5 build do painel (botão do LibreChat: $VITE_LIBRECHAT_URL)"
 echo "2/5 envio do código"
 COPYFILE_DISABLE=1 tar --no-mac-metadata --no-xattrs --exclude='__pycache__' -czf - \
   requirements.txt backend/picozero frontend/dist \
-  deploy/compose.yaml deploy/Dockerfile deploy/Dockerfile.dockerignore deploy/nginx.conf deploy/librechat/librechat.yaml deploy/librechat/Dockerfile deploy/librechat/marca \
+  deploy/compose.yaml deploy/Dockerfile deploy/Dockerfile.dockerignore deploy/nginx.conf deploy/librechat/librechat.yaml deploy/librechat/Dockerfile deploy/librechat/marca deploy/librechat/chat-entrar.html \
   | ssh_srv "mkdir -p $DESTINO && cd $DESTINO && rm -rf backend/picozero frontend/dist && tar --warning=no-unknown-keyword -xzf - && cp deploy/librechat/librechat.yaml deploy/librechat.yaml"
 
 echo "3/5 envio das credenciais (backend/.env -> $DESTINO/deploy/picozero.env, modo 600)"
@@ -56,12 +56,48 @@ else
   chmod 600 librechat.env
   echo "librechat.env criado (modo 600)"
 fi
+# Chat livre (sem senha): uma conta de convidado compartilhada por todos os visitantes.
+umask 077
+if [ ! -f convidado.env ]; then
+  { echo "CONVIDADO_EMAIL=convidado@picozeroday.app"; echo "CONVIDADO_SENHA=$(openssl rand -hex 16)"; } > convidado.env
+  echo "convidado.env criado (modo 600)"
+fi
+. ./convidado.env
+# Conta compartilhada: cadastro fechado e sem limites por conta/IP que travariam todos juntos.
+for par in ALLOW_REGISTRATION=false LOGIN_MAX=1000 LIMIT_CONCURRENT_MESSAGES=false LIMIT_MESSAGE_IP=false BAN_VIOLATIONS=false; do
+  chave=${par%%=*}
+  if grep -q "^$chave=" librechat.env; then sed -i "s|^$chave=.*|$par|" librechat.env; else echo "$par" >> librechat.env; fi
+done
+# Página que entra sozinha na conta de convidado. ">" reescreve no mesmo arquivo: o nginx continua com ele montado.
+sed -e "s|__EMAIL__|$CONVIDADO_EMAIL|" -e "s|__SENHA__|$CONVIDADO_SENHA|" librechat/chat-entrar.html > chat-entrar.html
+chmod 644 chat-entrar.html
 REMOTO
 
 echo "4/5 build e subida dos contêineres"
 # O envio acima apaga e recria frontend/dist (e troca o nginx.conf): o nginx em execução ficaria com o diretório/arquivo
 # antigos montados (403 ou configuração velha). Por isso o picozero-web é sempre recriado, para remontar o que acabou de subir.
 ssh_srv "cd $DESTINO/deploy && sudo docker compose up -d --build --remove-orphans --wait && sudo docker compose up -d --force-recreate --no-deps --wait picozero-web"
+
+echo "4b/5 contas do LibreChat (admin próprio e convidado do chat livre)"
+ssh_srv "bash -s" <<'REMOTO'
+set -euo pipefail
+cd /home/ubuntu/picozero/deploy
+. ./convidado.env
+contar() { sudo docker exec picozero-librechat-mongo-1 mongosh LibreChat --quiet --eval "db.users.countDocuments($1)"; }
+criar() { sudo docker exec picozero-librechat-1 npm run --silent create-user -- "$@" --email-verified=true >/dev/null; }
+if [ "$(contar '{}')" = "0" ]; then
+  # O primeiro usuário do LibreChat vira administrador: cria um admin próprio antes do convidado.
+  umask 077
+  SENHA_ADMIN=$(openssl rand -hex 16)
+  printf 'LIBRECHAT_ADMIN_EMAIL=admin@picozeroday.app\nLIBRECHAT_ADMIN_SENHA=%s\n' "$SENHA_ADMIN" > librechat-admin.env
+  criar admin@picozeroday.app "Administrador PicoZero" admin "$SENHA_ADMIN"
+  echo "admin criado (senha só no servidor: $PWD/librechat-admin.env, modo 600)"
+fi
+if [ "$(contar "{email: '$CONVIDADO_EMAIL'}")" = "0" ]; then
+  criar "$CONVIDADO_EMAIL" "Convidado PicoZero" convidado "$CONVIDADO_SENHA"
+  echo "convidado criado"
+fi
+REMOTO
 
 echo "5/5 conferência"
 curl -fsS -m 30 https://picozeroday.vercel.app/api/saude | python3 -c "import sys, json; d = json.load(sys.stdin); print('API:', d['status'], '| IA:', d['ia']['modo'], '| chave configurada:', d['ia']['configurado'])"
