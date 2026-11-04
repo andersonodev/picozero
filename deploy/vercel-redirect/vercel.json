@@ -1,0 +1,10 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "installCommand": "echo sem dependencias",
+  "buildCommand": "echo so redirecionamento",
+  "outputDirectory": "publico",
+  "redirects": [
+    { "source": "/(.*)", "destination": "https://picozeroday.vercel.app/$1", "permanent": false }
+  ]
+}
