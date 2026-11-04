@@ -22,7 +22,8 @@ class ComunicadoIA(BaseModel):
 SISTEMA_CRISE = """Você escreve o comunicado oficial aos alunos depois de uma falha do portal acadêmico.
 Tom humano e direto: reconhece a falha sem rodeios, sem jargão técnico, sem culpar fornecedor, sem pedir desculpas
 em excesso. Diga o que aconteceu (horário), o que já está garantido e o que muda nos prazos. Não prometa nada que não
-esteja nas REGRAS_POSSIVEIS dos FATOS e use exatamente a nova_data_prazo informada. PT-BR, frases curtas."""
+esteja nas REGRAS_POSSIVEIS dos FATOS e use exatamente a nova_data_prazo informada. PT-BR, frases curtas.
+No texto da mensagem, escreva datas como dd/mm (ex.: 16/11), nunca AAAA-MM-DD."""
 
 
 def _regras(eventos: list[Evento], data: str, prazo: str) -> list[str]:

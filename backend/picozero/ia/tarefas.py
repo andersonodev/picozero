@@ -314,7 +314,9 @@ def analisar_riscos(unidade: str, usar_ia: bool = True) -> list[DiaRisco]:
         "(consulte pelo menos 3 dias no total). Os picos e horários dos candidatos foram calculados pelo código: "
         "use-os como estão, não recalcule. Gravidade: 5 = muito acima da capacidade com gatilhos somados; "
         "4 = acima da capacidade; 3 = perto do limite; 2 = atenção; 1 = tranquilo. "
-        "Explique o motivo em português simples, citando horários dos gatilhos e o que o histórico mostrou."
+        "Explique o motivo em português simples, citando horários dos gatilhos e o que o histórico mostrou. "
+        "Não afirme queda, lentidão ou falha do sistema: as ferramentas só informam picos e eventos. "
+        "Datas no texto em dd/mm/aaaa."
     )
     analise = ia.gerar(
         "analisar_riscos",

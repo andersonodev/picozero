@@ -1,0 +1,11 @@
+# Não sobe para a Vercel: dependências locais, segredos, banco local, testes e artefatos.
+**/node_modules
+frontend/dist
+backend/.venv
+**/.env
+**/.env.*
+**/__pycache__
+backend/picozero.db*
+backend/tests
+backend/ferramentas/saida
+*.pdf

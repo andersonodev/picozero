@@ -97,6 +97,22 @@ def picos_do_periodo(
     return servico.motor().resumo(unidade.id, ini, fi, agora=agora)
 
 
+@router.get("/mapa")
+def mapa_de_calor(unidade: UnidadeDep, inicio: DataQuery = None, fim: DataQuery = None) -> list[dict[str, Any]]:
+    """Mapa de calor hora × dia: máximo previsto de cada hora (24 valores por dia) no período (padrão: semestre)."""
+    sem = contexto.semestre()
+    ini, fi = _data_valida(inicio or sem["inicio"]), _data_valida(fim or sem["fim"])
+    if (date.fromisoformat(fi) - date.fromisoformat(ini)).days > 400:
+        raise HTTPException(422, "Período máximo de 400 dias")
+    m = servico.motor()
+    saida = []
+    for iso in contexto.dias(ini, fi):
+        c = m.curva(unidade.id, iso)
+        cargas = [p.carga for p in c.pontos]
+        saida.append({"data": iso, "horas": [max(cargas[h * 4 : h * 4 + 4]) for h in range(24)], "nivel": c.nivel})
+    return saida
+
+
 @router.get("/previsao")
 def previsao(unidade: UnidadeDep, agora: AgoraDep, dias: Annotated[int, Query(ge=1, le=60)] = 7) -> dict[str, Any]:
     """Próximos dias a partir de agora, com o próximo dia de risco em destaque."""

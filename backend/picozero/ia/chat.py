@@ -119,8 +119,10 @@ def _data_citada(texto: str, agora: datetime) -> str | None:
             return date(a, mes, d).isoformat()
         except ValueError:
             return None
+    abreviados = ["seg", "ter", "qua", "qui", "sex", "sáb", "dom"]
     for i, nome in enumerate(DIAS):
-        if re.search(rf"\b{nome[:3]}", t):
+        # palavra inteira: "qual" não é "qua(rta)"
+        if re.search(rf"\b({nome}|{nome.replace('ç', 'c').replace('á', 'a')}|{abreviados[i]})(-feira)?\b", t):
             delta = (i - hoje.weekday()) % 7 or 7
             return (hoje + timedelta(days=delta)).isoformat()
     return None
@@ -142,6 +144,14 @@ def _por_regras(texto: str, unidade: str, agora: datetime) -> RespostaChat:
         d = tarefas.dicas(unidade, data or agora.date().isoformat(), agora=agora)
         usadas.append(_reg("dicas_de_manutencao", {"data": d.data}))
         resp = d.resumo + "\n" + "\n".join(f"• [{x.prioridade}] {x.horario} — {x.titulo}" for x in d.tarefas[:6])
+    elif re.search(r"pior|maior|mais (cr[ií]tico|cheio|pesado)|semestre|ranking", t) and not data:
+        sem = contexto.semestre()
+        dias = sorted(m.resumo(unidade, sem["inicio"], sem["fim"], agora=agora), key=lambda r: -r.pico)[:5]
+        usadas.append(_reg("picos_do_semestre", {"inicio": sem["inicio"], "fim": sem["fim"]}))
+        topo = dias[0]
+        resp = (f"Pior dia do semestre: {DIAS[date.fromisoformat(topo.data).weekday()]}, {ddmm(topo.data)}, pico de "
+                f"{inteiro(topo.pico)} às {topo.hora} ({decimal(topo.razao)}× a capacidade). Em seguida: "
+                + "; ".join(f"{ddmm(r.data)} ({inteiro(r.pico)} às {r.hora})" for r in dias[1:]) + ".")
     elif re.search(r"semana|próxim|proxim|calend", t) and not data:
         dias = tarefas.proximos_dias_criticos(unidade, agora, 7)
         usadas.append(_reg("proximos_picos", {"dias": 7}))

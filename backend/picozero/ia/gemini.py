@@ -96,10 +96,8 @@ class ClienteGemini:
                 api_key=CONFIG.gemini_api_key,
                 http_options=types.HttpOptions(
                     timeout=CONFIG.gemini_timeout_ms,
-                    retry_options=types.HttpRetryOptions(
-                        # Um retry curto e segue para o próximo modelo: em dia de demanda alta o 503 é por modelo.
-                        attempts=2, initial_delay=1.0, max_delay=4.0, http_status_codes=[408, 429, 500, 502, 503, 504]
-                    ),
+                    # Sem retry no SDK: um 503 troca de modelo na hora (em dia de demanda alta o 503 é por modelo).
+                    retry_options=types.HttpRetryOptions(attempts=1),
                 ),
             )
         return self._cliente
@@ -152,6 +150,7 @@ class ClienteGemini:
         detalhe: str = "",
         usar_cache: bool = True,
         max_chamadas: int = 10,
+        prazo_s: float = 45.0,
     ) -> RespostaIA | None:
         """Chama o Gemini. Devolve None quando não há chave, cota ou resposta válida (use o fallback)."""
         if not self.disponivel:
@@ -181,7 +180,17 @@ class ClienteGemini:
             ),
         )
         modelos = list(dict.fromkeys([m for m in [self._modelo_ok, *CONFIG.gemini_modelos] if m]))
+        inicio = time.perf_counter()
         for modelo in modelos:
+            restante = prazo_s - (time.perf_counter() - inicio)
+            if restante < 3:
+                self.registrar(etapa, f"prazo de {prazo_s:.0f} s esgotado: usando regras", modelo="regras", ok=False)
+                return None
+            # Prazo total da chamada (todas as tentativas): a rota interativa nunca fica presa.
+            config.http_options = types.HttpOptions(
+                timeout=int(min(restante, CONFIG.gemini_timeout_ms / 1000) * 1000),
+                retry_options=types.HttpRetryOptions(attempts=1),
+            )
             t0 = time.perf_counter()
             try:
                 self._contar()
