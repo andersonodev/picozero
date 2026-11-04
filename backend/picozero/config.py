@@ -50,7 +50,7 @@ class Config:
     # Teto diário de chamadas ao Gemini (protege a chave numa demo pública).
     ia_limite_diario: int = field(default_factory=lambda: _int("PICOZERO_IA_LIMITE_DIARIO", 400))
     ia_limite_por_minuto_ip: int = field(default_factory=lambda: _int("PICOZERO_IA_POR_MINUTO", 12))
-    db_path: str = field(default_factory=lambda: os.getenv("PICOZERO_DB", _db_padrao()))
+    db_path: str = field(default_factory=lambda: os.getenv("PICOZERO_DB") or _db_padrao())
     cors_origens: list[str] = field(default_factory=lambda: _lista("PICOZERO_CORS", "*"))
     # Se definido, rotas de escrita (ingestão, reconhecer alerta) exigem este token.
     token_escrita: str | None = field(default_factory=lambda: os.getenv("PICOZERO_TOKEN") or None)

@@ -5,7 +5,7 @@ import { Bot } from 'lucide-react'
 
 const TEXTOS = {
   gemini: 'Gerado por IA (Gemini) · revise antes de agir',
-  regras: 'Gerado pelas regras do motor · IA indisponível agora',
+  regras: 'Gerado pelas regras do motor (sem IA) · revise antes de agir',
   previa: 'Exemplo de saída da IA (prévia) · revise antes de agir',
 }
 

@@ -1,36 +1,33 @@
 // frontend/src/telas/ProvaCarga.jsx
-// Prova de carga: latência antes × depois × controle (saída de carga/comparar.py)
+// Prova de carga: latência antes × depois × controle (saída do teste de carga do motor)
 // e o que o aluno vê com a fila virtual. Sem ilustração: mock de produto em CSS.
-import { CartesianGrid, Line, LineChart, ReferenceDot, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { CircleCheck, Info, ShieldCheck, TriangleAlert } from 'lucide-react'
-import { CONTEXTO, resumoLatencia, seriesLatencia } from '../dados/previa'
+import * as api from '../api/cliente'
+import { usarApi } from '../api/usarApi'
+import Latencia from '../graficos/Latencia'
 import { useTema } from '../tema'
-import { numero } from '../util'
-
-function Dica({ active, payload, label }) {
-  if (!active || !payload?.length) return null
-  return (
-    <div className="dica-grafico">
-      <div className="cab">{label} · p95</div>
-      {payload.map((p) => (
-        <div key={p.dataKey} className="linha">
-          <span><i style={{ background: p.color || p.stroke }} />{p.name}</span>
-          <b>{numero(p.value)} ms</b>
-        </div>
-      ))}
-    </div>
-  )
-}
+import { curta, numero } from '../util'
 
 const pct = (x) => `${(x * 100).toFixed(1).replace('.', ',')}%`
 
-export default function ProvaCarga() {
+export default function ProvaCarga({ unidade }) {
   const t = useTema()
-  const series = seriesLatencia()
-  const resumo = resumoLatencia()
+  const prova = usarApi(() => api.provaCarga(unidade), [unidade])
+  const d = prova.dados
   const cores = { antes: t.semPlano, depois: t.comPlano, controle: t.controle }
-  const [antes, depois] = resumo
-  const picoAntes = series.reduce((a, b) => (b.antes > a.antes ? b : a))
+
+  if (!d) {
+    return (
+      <>
+        <header className="cab-pagina"><div><h1>Prova de carga</h1></div></header>
+        <div className="esq-bloco" style={{ height: 420 }} aria-busy="true" />
+      </>
+    )
+  }
+
+  const antes = d.resumo.find((r) => r.chave === 'antes')
+  const depois = d.resumo.find((r) => r.chave === 'depois')
+  const ganho = antes && depois ? Math.round((1 - depois.p95 / antes.p95) * 100) : null
 
   return (
     <>
@@ -38,23 +35,23 @@ export default function ProvaCarga() {
         <div>
           <h1>Prova de carga</h1>
           <p className="sub">
-            O Locust reproduz a curva de 10/09 calculada pelo código (histórico + cálculo), nunca a saída do Gemini: a prova não é circular.
+            O Locust reproduz a curva de {curta(d.data || '2026-09-10')} calculada pelo motor (histórico + cálculo), nunca a saída da IA: a prova não é circular.
           </p>
         </div>
       </header>
 
-      <section className="card aviso ok secao">
-        <div className="aviso-icone"><CircleCheck size={20} strokeWidth={2} aria-hidden="true" /></div>
-        <div className="aviso-corpo">
-          <h3>Com o plano, o p95 cai de {numero(antes.p95)} ms para {numero(depois.p95)} ms</h3>
-          <p>
-            E os erros 503 vão de {pct(antes.erros)} para {pct(depois.erros)}. Mesmo servidor simulado, três perfis de carga.
-          </p>
-        </div>
-      </section>
+      {antes && depois && (
+        <section className="card aviso ok secao">
+          <div className="aviso-icone"><CircleCheck size={20} strokeWidth={2} aria-hidden="true" /></div>
+          <div className="aviso-corpo">
+            <h3>Com o plano, o p95 cai de {numero(antes.p95)} ms para {numero(depois.p95)} ms{ganho > 0 ? ` (−${ganho}%)` : ''}</h3>
+            <p>E os erros 503 vão de {pct(antes.erros)} para {pct(depois.erros)}. Mesmo servidor simulado, três perfis de carga.</p>
+          </div>
+        </section>
+      )}
 
       <div className="grade g-3 secao">
-        {resumo.map((c) => (
+        {d.resumo.map((c) => (
           <div key={c.chave} className="card metrica">
             <span className="perfil-cab"><i style={{ background: cores[c.chave] }} />{c.nome}</span>
             <span className="perfil-sub">{c.sub}</span>
@@ -80,27 +77,17 @@ export default function ProvaCarga() {
         <div className="card-cab">
           <div>
             <h2>Latência p95 ao longo do dia simulado</h2>
-            <p>/sim/login e /sim/prova · base × (1 + (ativos ÷ {CONTEXTO.capacidade})³) · 503 acima de 1,5× a capacidade</p>
+            <p>/sim/login e /sim/prova · base × (1 + (ativos ÷ {d.capacidade})³) · 503 acima de 1,5× a capacidade · Ctrl + rolagem para dar zoom</p>
           </div>
           <div className="legenda">
-            {resumo.map((c) => (
+            {d.resumo.map((c) => (
               <span key={c.chave}><i style={{ background: cores[c.chave], height: 3, width: 14 }} />{c.nome}</span>
             ))}
+            <span><i className="linha" />meta p95</span>
           </div>
         </div>
         <div className="card-corpo">
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={series} margin={{ top: 26, right: 16, bottom: 0, left: 0 }}>
-              <CartesianGrid vertical={false} stroke={t.grade} />
-              <XAxis dataKey="hora" interval={11} tick={{ fill: t.mudo, fontSize: 12 }} tickLine={false} axisLine={{ stroke: t.grade }} />
-              <YAxis tick={{ fill: t.mudo, fontSize: 12 }} tickLine={false} axisLine={false} width={70} tickFormatter={(v) => `${numero(v)} ms`} />
-              <Tooltip content={<Dica />} cursor={{ stroke: t.mudo, strokeDasharray: '3 3' }} />
-              {resumo.map((c) => (
-                <Line key={c.chave} type="monotone" dataKey={c.chave} name={c.nome} stroke={cores[c.chave]} strokeWidth={c.chave === 'depois' ? 2.5 : 2} dot={false} activeDot={{ r: 4, stroke: t.superficie, strokeWidth: 2 }} isAnimationActive={false} />
-              ))}
-              <ReferenceDot x={picoAntes.hora} y={picoAntes.antes} r={5} fill={cores.antes} stroke={t.superficie} strokeWidth={2} label={{ value: `sem plano: ${numero(picoAntes.antes)} ms`, position: 'top', fill: t.texto, fontSize: 12, fontWeight: 600 }} />
-            </LineChart>
-          </ResponsiveContainer>
+          <Latencia series={d.series} resumo={d.resumo} cores={cores} />
         </div>
       </section>
 
@@ -108,7 +95,7 @@ export default function ProvaCarga() {
         <div className="card-cab">
           <div>
             <h2>O que o aluno vê com a fila virtual</h2>
-            <p>FILA_VIRTUAL=1 · asyncio.Semaphore({CONTEXTO.capacidade}) · quem entra navega com latência estável</p>
+            <p>FILA_VIRTUAL=1 · asyncio.Semaphore({d.capacidade}) · quem entra navega com latência estável</p>
           </div>
         </div>
         <div className="card-corpo">
@@ -145,7 +132,8 @@ export default function ProvaCarga() {
       </section>
 
       <p className="nota-rodape">
-        <Info size={15} aria-hidden="true" /> Prévia com números simulados. Na E8 estes valores vêm de carga/comparar.py.
+        <Info size={15} aria-hidden="true" />
+        {prova.origem === 'api' ? 'Números do teste de carga do motor (servidor simulado, curva do código).' : 'Prévia com números simulados; com o motor no ar estes valores vêm do teste de carga.'}
       </p>
     </>
   )

@@ -20,7 +20,7 @@ export default function Latencia({ series, resumo, cores }) {
       grid: { left: 64, right: 20, top: 34, bottom: 28 },
       xAxis: { type: 'category', data: horas, boundaryGap: false, axisLabel: { interval: 11 } },
       yAxis: { type: 'value', max: Math.ceil((maximo * 1.12) / 100) * 100, axisLabel: { formatter: (v) => `${numero(v)} ms` } },
-      dataZoom: [{ type: 'inside' }],
+      dataZoom: [{ type: 'inside', zoomOnMouseWheel: 'ctrl', moveOnMouseWheel: false, moveOnMouseMove: true }],
       tooltip: {
         trigger: 'axis',
         confine: true,

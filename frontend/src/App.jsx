@@ -3,6 +3,7 @@
 // motor e o assistente; a tela ativa recebe os dados-base da API (ou da prévia, sem backend).
 import { useEffect, useState } from 'react'
 import {
+  BellRing,
   Bot,
   CalendarDays,
   ChevronsUpDown,
@@ -14,6 +15,7 @@ import {
   Moon,
   Sun,
   TriangleAlert,
+  Upload,
 } from 'lucide-react'
 import { UNIDADE_PADRAO, UNIDADES, unidadePorId } from './dados/unidades'
 import { usarBase } from './dados/usarBase'
@@ -25,6 +27,9 @@ import DiasRisco from './telas/DiasRisco'
 import DetalheDia from './telas/DetalheDia'
 import ProvaCarga from './telas/ProvaCarga'
 import Fontes from './telas/Fontes'
+import Alertas from './telas/Alertas'
+import Entrada from './telas/Entrada'
+import Assistente from './componentes/Assistente'
 
 const GRUPOS = [
   {
@@ -33,6 +38,7 @@ const GRUPOS = [
       { chave: 'visao', nome: 'Visão geral', Icone: LayoutGrid },
       { chave: 'calendario', nome: 'Calendário', Icone: CalendarDays },
       { chave: 'riscos', nome: 'Dias críticos', Icone: TriangleAlert, contador: true },
+      { chave: 'alertas', nome: 'Alertas ao vivo', Icone: BellRing },
     ],
   },
   {
@@ -44,7 +50,10 @@ const GRUPOS = [
   },
   {
     nome: 'Dados',
-    itens: [{ chave: 'fontes', nome: 'Fonte de dados', Icone: Database }],
+    itens: [
+      { chave: 'fontes', nome: 'Fonte de dados', Icone: Database },
+      { chave: 'entrada', nome: 'Entrada de dados', Icone: Upload },
+    ],
   },
 ]
 const TELAS = GRUPOS.flatMap((g) => g.itens.map((i) => i.chave))
@@ -196,6 +205,8 @@ export default function App() {
               {tela === 'dia' && <DetalheDia base={dados} unidade={unidadeId} dia={dia} setDia={setDia} />}
               {tela === 'carga' && <ProvaCarga unidade={unidadeId} />}
               {tela === 'fontes' && <Fontes unidade={unidadeId} />}
+              {tela === 'alertas' && <Alertas unidade={unidadeId} abrirDia={abrirDia} />}
+              {tela === 'entrada' && <Entrada unidade={unidadeId} />}
             </>
           )}
         </main>
@@ -206,6 +217,7 @@ export default function App() {
           <Bot size={18} aria-hidden="true" /> Perguntar ao assistente
         </button>
       )}
+      <Assistente aberto={assistente} aoFechar={() => setAssistente(false)} unidade={unidadeId} irParaDia={abrirDia} />
     </div>
   )
 }

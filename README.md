@@ -9,6 +9,23 @@ O projeto tem duas partes no mesmo repositório:
 | `backend/` | Motor de previsão, API REST, alertas ao vivo e servidor MCP | Python 3.12, FastAPI, Gemini, SQLite |
 | `frontend/` | Painel de operações (visão geral, calendário, dias de risco, prova de carga, fontes) | React 19, Vite, ECharts |
 
+## Windows: jeito rápido
+
+Abra o PowerShell numa pasta onde quer o projeto e cole:
+
+```powershell
+iwr https://github.com/andersonodev/asmulhereseoanderson/archive/refs/heads/main.zip -OutFile picozero.zip; Expand-Archive picozero.zip -DestinationPath .; cd asmulhereseoanderson-main; .\rodar-windows.bat
+```
+
+Isso baixa o projeto, instala o que faltar e abre o painel no navegador. Se você já tem a pasta do projeto (pelo `git clone` ou pelo botão **Code › Download ZIP**), basta dar dois cliques nos scripts:
+
+| Script | O que faz |
+|---|---|
+| `instalar-windows.bat` | Instala o uv (que traz o Python 3.12) e, se faltar, o Node.js LTS pelo winget. Depois instala as dependências do backend e do frontend e pede a chave do Gemini (opcional). Só precisa rodar uma vez. |
+| `rodar-windows.bat` | Abre duas janelas, uma com o backend e outra com o painel, espera a API responder e abre http://localhost:5173. Na primeira vez, roda a instalação sozinho. |
+
+Para parar, feche as duas janelas "PicoZero backend" e "PicoZero painel". Se o Windows mostrar "O Windows protegeu o computador", clique em **Mais informações › Executar assim mesmo**.
+
 ## Pré-requisitos
 
 - [uv](https://docs.astral.sh/uv/) (ele instala o Python 3.12 sozinho se faltar)

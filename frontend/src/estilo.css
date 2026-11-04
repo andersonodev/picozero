@@ -600,3 +600,132 @@ h1, h2, h3, h4 { color: var(--texto); }
   .cal-num { font-size: 12px; }
 }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+/* ---------- Seletor de unidade e estado do motor (menu) ---------- */
+.sb-unidade {
+  position: relative; display: flex; align-items: center; gap: 10px;
+  margin: 0 2px 6px; padding: 9px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.16); border-radius: var(--raio);
+  background: rgba(255, 255, 255, 0.04); cursor: pointer;
+}
+.sb-unidade:hover { border-color: rgba(255, 255, 255, 0.32); }
+.sb-unidade:focus-within { outline: 2px solid var(--teal); outline-offset: 1px; }
+.sb-unidade-txt { flex: 1; min-width: 0; }
+.sb-unidade-txt b { display: block; font-size: 14px; font-weight: 600; color: #fff; }
+.sb-unidade-txt span { display: block; font-size: 12px; color: rgba(255, 255, 255, 0.55); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sb-unidade svg { color: rgba(255, 255, 255, 0.6); flex: none; }
+.sb-unidade select { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+.sb-unidade select option { color: #12284c; background: #fff; }
+
+.sb-status {
+  display: flex; gap: 10px; align-items: flex-start; width: 100%; padding: 10px; border: 0; border-radius: var(--raio);
+  background: rgba(255, 255, 255, 0.05); text-align: left; color: rgba(255, 255, 255, 0.7); font-size: 12px; line-height: 1.4;
+}
+.sb-status:hover { background: rgba(255, 255, 255, 0.09); }
+.sb-status b { display: block; color: #fff; font-size: 12.5px; font-weight: 600; }
+.sb-ponto { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; flex: none; background: var(--atencao); box-shadow: 0 0 0 3px rgba(224, 166, 20, 0.2); }
+.sb-ponto.ok { background: #2fd08a; box-shadow: 0 0 0 3px rgba(47, 208, 138, 0.22); }
+.sb-ponto.carregando { background: var(--teal); animation: pulsa 1.2s ease-in-out infinite; }
+@keyframes pulsa { 50% { opacity: 0.35; } }
+
+.fab-assistente {
+  position: fixed; right: 22px; bottom: 22px; z-index: 40;
+  display: inline-flex; align-items: center; gap: 9px; height: 46px; padding: 0 18px 0 16px;
+  border: 0; border-radius: 999px; background: var(--navy); color: #fff; font-size: 14px; font-weight: 600;
+  box-shadow: 0 10px 28px rgba(12, 27, 51, 0.32);
+}
+.fab-assistente svg { color: var(--teal); }
+.fab-assistente:hover { background: var(--navy-700); }
+.tema-escuro .fab-assistente { background: var(--teal); color: #04222a; }
+.tema-escuro .fab-assistente svg { color: #04222a; }
+
+/* ---------- Carregamento ---------- */
+.esq-linha, .esq-bloco {
+  border-radius: var(--raio-g); background: linear-gradient(90deg, var(--superficie-3) 0%, var(--superficie-2) 50%, var(--superficie-3) 100%);
+  background-size: 200% 100%; animation: brilho 1.3s linear infinite;
+}
+.esq-linha { border-radius: 6px; }
+@keyframes brilho { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+.spinner.claro { border-color: rgba(255, 255, 255, 0.35); border-top-color: #fff; }
+
+/* ---------- Aviso de IA ---------- */
+.aviso-ia {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 24px; padding: 3px 9px; border-radius: 6px; max-width: 100%;
+  font-size: 12px; font-weight: 500; line-height: 1.35;
+  background: var(--teal-suave); color: var(--teal-600); border: 1px solid color-mix(in srgb, var(--teal) 30%, transparent);
+}
+.tema-escuro .aviso-ia { color: var(--teal); }
+.aviso-ia.regras { background: var(--superficie-3); color: var(--texto-2); border-color: var(--borda); }
+.painel-motivo p { margin: 0 0 10px; }
+.aviso-ia svg { flex: none; }
+
+/* ---------- Métrica clicável e tabela ---------- */
+button.card.metrica { font: inherit; text-align: left; color: inherit; cursor: pointer; }
+button.card.metrica:hover { border-color: var(--borda-forte); box-shadow: 0 4px 14px rgba(12, 27, 51, 0.08); }
+button.card.metrica:disabled { cursor: default; }
+.tabela tr.passado td { opacity: 0.55; }
+
+/* ---------- Calendário: filtros e carga do dia ---------- */
+.filtros { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
+.filtro {
+  display: inline-flex; align-items: center; gap: 7px; height: 30px; padding: 0 11px; border-radius: 999px;
+  border: 1px solid var(--borda-forte); background: var(--superficie); font-size: 12.5px; font-weight: 500; color: var(--texto);
+}
+.filtro i { width: 9px; height: 9px; border-radius: 3px; background: var(--cor-ev); }
+.filtro.desligado { color: var(--mudo); background: transparent; border-style: dashed; }
+.filtro.desligado i { background: transparent; box-shadow: inset 0 0 0 1.5px var(--mudo); }
+.filtros-dica { margin-left: auto; font-size: 12px; color: var(--mudo); }
+.cal-cel[class*='carga-']::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 3px; background: var(--cor-carga); }
+.cal-cel.carga-atencao { --cor-carga: var(--atencao); }
+.cal-cel.carga-alto { --cor-carga: var(--alto); }
+.cal-cel.carga-critico { --cor-carga: var(--critico); }
+.cal-pct { font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.cal-pct.atencao { color: color-mix(in srgb, var(--atencao) 70%, var(--texto)); }
+.cal-pct.alto { color: var(--alto); }
+.cal-pct.critico { color: var(--critico); }
+.legenda i.topo { height: 4px; width: 14px; border-radius: 2px; }
+
+/* ---------- Dias críticos: curva do dia ---------- */
+.risco-curva { width: 190px; display: grid; grid-template-columns: 1fr 1fr 1fr; row-gap: 2px; }
+.risco-curva > div { grid-column: 1 / -1; }
+.risco-curva span { font-size: 10.5px; color: var(--mudo); }
+.risco-curva span:nth-of-type(2) { text-align: center; }
+.risco-curva span:nth-of-type(3) { text-align: right; }
+.nota-rodape.ok { color: var(--ok); }
+.nota-rodape.erro { color: var(--critico); }
+
+/* ---------- Plano do dia: manutenção ---------- */
+.manut-faixas { display: flex; gap: 8px; flex-wrap: wrap; }
+.manut-faixa { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--raio); background: var(--superficie-2); border: 1px solid var(--borda); font-size: 13.5px; color: var(--texto-corpo); }
+.manut-faixa svg { color: var(--texto-2); }
+.manut-faixa.ok { background: var(--ok-suave); border-color: transparent; }
+.manut-faixa.ok svg { color: var(--ok); }
+.manut-faixa.critico { background: var(--critico-suave); border-color: transparent; }
+.manut-faixa.critico svg { color: var(--critico); }
+.prioridade { display: inline-block; margin-top: 3px; font-size: 11.5px; font-weight: 600; text-transform: capitalize; }
+.prioridade.alta, .prioridade.critica { color: var(--critico); }
+.prioridade.media { color: color-mix(in srgb, var(--atencao) 70%, var(--texto)); }
+.prioridade.baixa { color: var(--texto-2); }
+.tarefa-titulo { display: block; font-weight: 600; color: var(--texto); font-size: 13.5px; }
+.nao-fazer { padding: 14px 16px; border-radius: var(--raio); background: var(--critico-suave); align-self: start; }
+.nao-fazer h3 { margin: 0 0 8px; font-size: 14px; display: flex; align-items: center; gap: 6px; color: var(--critico); }
+.nao-fazer ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--texto-corpo); }
+
+/* ---------- Fontes: validação ---------- */
+.numeros-linha { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 8px; }
+.numeros-linha div { padding: 10px 12px; border-radius: var(--raio); background: var(--superficie-2); border: 1px solid var(--borda); }
+.numeros-linha span { display: block; font-size: 12px; color: var(--texto-2); }
+.numeros-linha b { font-family: var(--display); font-size: 24px; font-weight: 600; color: var(--texto); font-variant-numeric: tabular-nums; }
+.leitura { margin: 12px 0 0; font-size: 13.5px; color: var(--texto-corpo); line-height: 1.55; }
+
+@media (max-width: 900px) {
+  .sb-unidade { margin: 0; padding: 6px 30px 6px 10px; flex: none; }
+  .sb-unidade-txt span, .sb-status { display: none; }
+  .numeros-linha { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .risco-curva { width: 100%; }
+  .filtros-dica { display: none; }
+}
+@media (max-width: 640px) {
+  .sb-unidade-txt b { font-size: 12.5px; }
+  .fab-assistente { right: 14px; bottom: 14px; height: 44px; padding: 0 14px; }
+}

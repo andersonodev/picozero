@@ -79,7 +79,9 @@ def responder(pedido: PedidoChat) -> RespostaChat:
             f"{inteiro(uni.alunos)} alunos, capacidade {uni.capacidade} acessos simultâneos). "
             f"Agora é {DIAS[agora.weekday()]}, {agora:%d/%m/%Y %H:%M}. Responda em português do Brasil, curto e "
             "operacional (o que acontece, quando, o que fazer). Use as ferramentas para QUALQUER número: nunca "
-            "estime carga, horário ou data de cabeça. Converta 'amanhã', 'quinta' etc. para AAAA-MM-DD antes de chamar."
+            "estime carga, horário ou data de cabeça. Converta 'amanhã', 'quinta' etc. para AAAA-MM-DD antes de chamar. "
+            "Use o nível exatamente como a ferramenta devolve (rotulo): folga < 60% da capacidade, atenção 60–80%, "
+            "alto 80–100%, crítico acima de 100%. Nunca chame de crítico um dia que a ferramenta não marcou como crítico."
         )
         conteudo = [
             types.Content(role="user" if m.papel == "usuario" else "model", parts=[types.Part(text=m.texto)])

@@ -11,6 +11,7 @@ from .. import contexto, servico
 from ..dominio import (
     DATA,
     ORDEM_NIVEL,
+    ROTULO_NIVEL,
     DiaRisco,
     DicasManutencao,
     Evento,
@@ -411,7 +412,11 @@ def proximos_dias_criticos(unidade: str, agora: datetime, dias: int = 7) -> list
     m = servico.motor()
     ini = agora.date().isoformat()
     fim = (agora.date() + timedelta(days=dias)).isoformat()
-    return [r.model_dump() for r in m.resumo(unidade, ini, fim, agora=agora) if ORDEM_NIVEL[r.nivel] >= ORDEM_NIVEL["alerta"]]
+    return [
+        {**r.model_dump(), "rotulo": ROTULO_NIVEL[r.nivel], "acima_da_capacidade": r.nivel == "critico"}
+        for r in m.resumo(unidade, ini, fim, agora=agora)
+        if ORDEM_NIVEL[r.nivel] >= ORDEM_NIVEL["alerta"]
+    ]
 
 
 def pico_resumo(p: Pico) -> str:

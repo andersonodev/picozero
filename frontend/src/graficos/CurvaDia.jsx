@@ -17,7 +17,9 @@ export default function CurvaDia({ pontos, pontosCom, cap, eventos = [], vista =
     const horas = pontos.map((p) => p.hora)
     const picoSem = maior(pontos)
     const picoCom = pontosCom ? maior(pontosCom) : null
-    const teto = Math.ceil((Math.max(cap, picoSem.carga, picoCom?.carga || 0) * 1.15) / 100) * 100
+    const topo = Math.max(cap, picoSem.carga, picoCom?.carga || 0) * 1.12
+    const passo = topo > 1200 ? 500 : topo > 600 ? 200 : 100
+    const teto = Math.ceil(topo / passo) * passo
     const mostraSem = !pontosCom || vista !== 'com'
     const mostraCom = Boolean(pontosCom) && vista !== 'sem'
     const corSem = compacto && picoSem.carga <= cap ? t.teal : pontosCom ? t.semPlano : picoSem.carga > cap ? t.critico : t.teal
@@ -127,8 +129,8 @@ export default function CurvaDia({ pontos, pontosCom, cap, eventos = [], vista =
           ? { interval: (i, v) => ['06:00', '12:00', '18:00'].includes(v), fontSize: 11 }
           : { interval: 11 },
       },
-      yAxis: { type: 'value', max: teto, show: !compacto, splitNumber: 4 },
-      dataZoom: compacto ? [] : [{ type: 'inside' }],
+      yAxis: { type: 'value', max: teto, interval: passo, show: !compacto, axisLabel: { formatter: (v) => numero(v) } },
+      dataZoom: compacto ? [] : [{ type: 'inside', zoomOnMouseWheel: 'ctrl', moveOnMouseWheel: false, moveOnMouseMove: true }],
       tooltip: {
         trigger: 'axis',
         confine: true,

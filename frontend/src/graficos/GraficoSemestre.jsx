@@ -57,11 +57,13 @@ export default function GraficoSemestre({ picos, mapa, riscos, marcos, feriados,
         const d = picos[p.dataIndex]
         const r = risco[d.data]
         const fer = feriados[d.data]
+        const per = marcos.filter((m) => m.inicio <= d.data && d.data <= m.fim).map((m) => esc(m.nome)).join(' · ')
         const evs = (d.eventos || []).slice(0, 3).map((e) => esc(rotuloCurto(e))).join(' · ')
         return [
           `<b>${semana(d.data).slice(0, 3)}, ${curta(d.data)}</b>${fer ? ` · ${esc(fer)}` : ''}`,
           `Pico ${numero(d.pico)} às ${d.hora} · ${Math.round((d.pico / cap) * 100)}% da capacidade`,
           evs && `<span style="opacity:.7">${evs}</span>`,
+          per && `<span style="opacity:.55">Período: ${per}</span>`,
           r && `<span style="color:${t.teal}">Gemini: gravidade ${r.gravidade} de 5 · clique para abrir</span>`,
         ].filter(Boolean).join('<br/>')
       }
@@ -96,7 +98,7 @@ export default function GraficoSemestre({ picos, mapa, riscos, marcos, feriados,
       ],
       axisPointer: { link: [{ xAxisIndex: 'all' }] },
       dataZoom: [
-        { type: 'inside', xAxisIndex: [0, 1] },
+        { type: 'inside', xAxisIndex: [0, 1], zoomOnMouseWheel: 'ctrl', moveOnMouseWheel: false, moveOnMouseMove: true },
         { type: 'slider', xAxisIndex: [0, 1], height: 18, bottom: 8, showDetail: false },
       ],
       visualMap: { type: 'piecewise', seriesIndex: 1, dimension: 2, pieces: faixasDeCalor(t), show: false },
@@ -112,7 +114,7 @@ export default function GraficoSemestre({ picos, mapa, riscos, marcos, feriados,
           markArea: {
             silent: true,
             itemStyle: { color: alfa(t.teal, t.escuro ? 0.1 : 0.06) },
-            label: { position: 'insideTopLeft', color: t.texto2, fontSize: 10.5 },
+            label: { show: false },
             data: periodos,
           },
         },

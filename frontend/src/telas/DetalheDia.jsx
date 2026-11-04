@@ -1,45 +1,16 @@
 // frontend/src/telas/DetalheDia.jsx
-// Plano do dia: curva de carga × capacidade, plano em 3 níveis, tentativas de validação e crise.
-import { useMemo, useState } from 'react'
-import {
-  Area,
-  CartesianGrid,
-  ComposedChart,
-  Line,
-  ReferenceDot,
-  ReferenceLine,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts'
-import { CalendarDays, Check, FileText, Megaphone, Server, Siren, X } from 'lucide-react'
+// Plano do dia: curva de carga × capacidade (motor), plano em 3 níveis (IA, validado pelo motor),
+// tentativas de validação, manutenção do dia para a TI e a simulação de crise.
+import { useState } from 'react'
+import { CalendarDays, Check, Clock, FileText, Megaphone, RefreshCw, Server, Siren, Wrench, X } from 'lucide-react'
+import * as api from '../api/cliente'
+import { usarApi } from '../api/usarApi'
+import AvisoIA from '../componentes/AvisoIA'
 import ChipTipo from '../componentes/ChipTipo'
 import ModalCrise from '../componentes/ModalCrise'
-import { CONTEXTO, DIAS_RISCO, EVENTOS, PLANOS, TENTATIVAS, curvaDoDia, picoDoDia } from '../dados/previa'
-import { nivelDaGravidade, situacaoDaCarga, useTema } from '../tema'
+import CurvaDia from '../graficos/CurvaDia'
+import { nivelDaGravidade, situacaoDoNivel, useTema } from '../tema'
 import { curta, longa, numero, rotuloCurto } from '../util'
-
-const COM_PLANO = { notasMovidas: true, lembretesEscalonados: true }
-
-function Dica({ active, payload, label, cap }) {
-  if (!active || !payload?.length) return null
-  return (
-    <div className="dica-grafico">
-      <div className="cab">{label}</div>
-      {payload.map((p) => (
-        <div key={p.dataKey} className="linha">
-          <span><i style={{ background: p.color || p.stroke }} />{p.name}</span>
-          <b>{numero(p.value)}</b>
-        </div>
-      ))}
-      <div className="linha" style={{ marginTop: 4 }}>
-        <span>Capacidade</span>
-        <b>{cap}</b>
-      </div>
-    </div>
-  )
-}
 
 function Nivel({ Icone, titulo, itens }) {
   return (
@@ -57,31 +28,107 @@ function Nivel({ Icone, titulo, itens }) {
   )
 }
 
-export default function DetalheDia({ dia, setDia }) {
+function Manutencao({ dicas, reescrever, reescrevendo }) {
+  return (
+    <section className="card secao">
+      <div className="card-cab">
+        <div>
+          <h2>Manutenção do dia</h2>
+          <p>{dicas.resumo}</p>
+        </div>
+        <div className="cab-acoes">
+          <AvisoIA origem={dicas.origem} compacto />
+          <button className="botao" onClick={reescrever} disabled={reescrevendo}>
+            {reescrevendo ? <span className="spinner" /> : <RefreshCw size={15} aria-hidden="true" />}
+            {reescrevendo ? 'Reescrevendo…' : 'Reescrever com Gemini'}
+          </button>
+        </div>
+      </div>
+      <div className="card-corpo">
+        <div className="manut-faixas">
+          {dicas.janela_manutencao && (
+            <div className="manut-faixa ok">
+              <Wrench size={15} aria-hidden="true" />
+              <span>Janela de manutenção <b>{dicas.janela_manutencao.inicio}–{dicas.janela_manutencao.fim}</b></span>
+            </div>
+          )}
+          {dicas.escalar_ate && (
+            <div className="manut-faixa">
+              <Server size={15} aria-hidden="true" />
+              <span>Escalar o portal até <b>{dicas.escalar_ate}</b></span>
+            </div>
+          )}
+          {(dicas.congelamento || []).map((z) => (
+            <div key={`${z.inicio}-${z.fim}`} className="manut-faixa critico">
+              <Clock size={15} aria-hidden="true" />
+              <span>Congelar deploys <b>{z.inicio}–{z.fim}</b> (máx. {numero(z.max)})</span>
+            </div>
+          ))}
+        </div>
+        <div className="grade g-2" style={{ marginTop: 16 }}>
+          <table className="tabela">
+            <thead>
+              <tr><th>Quando</th><th>Tarefa</th><th>Quem</th></tr>
+            </thead>
+            <tbody>
+              {(dicas.tarefas || []).map((tf) => (
+                <tr key={`${tf.horario}-${tf.titulo}`}>
+                  <td className="data-cel"><b>{tf.horario}</b><span className={`prioridade ${tf.prioridade}`}>{tf.prioridade}</span></td>
+                  <td><b className="tarefa-titulo">{tf.titulo}</b><div className="fraco">{tf.detalhe}</div></td>
+                  <td className="fraco">{tf.responsavel}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {(dicas.nao_fazer || []).length > 0 && (
+            <div className="nao-fazer">
+              <h3><X size={15} aria-hidden="true" /> Não fazer neste dia</h3>
+              <ul>{dicas.nao_fazer.map((n) => <li key={n}>{n}</li>)}</ul>
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+export default function DetalheDia({ base, unidade, dia, setDia }) {
   const t = useTema()
   const [vista, setVista] = useState('ambos')
   const [crise, setCrise] = useState(false)
-  const cap = CONTEXTO.capacidade
+  const [gerado, setGerado] = useState({})
+  const [gerando, setGerando] = useState(false)
+  const [dicasNovas, setDicasNovas] = useState({})
+  const [reescrevendo, setReescrevendo] = useState(false)
+  const cap = base.contexto.capacidade
 
-  const risco = DIAS_RISCO.find((r) => r.data === dia)
-  const plano = PLANOS[dia]
-  const tentativas = TENTATIVAS[dia] || []
-  const eventos = EVENTOS.filter((e) => e.data === dia)
+  const curva = usarApi(() => api.curva(dia, unidade), [dia, unidade])
+  const planoApi = usarApi(() => api.plano(dia, unidade), [dia, unidade])
+  const dicas = usarApi(() => api.dicas(dia, unidade), [dia, unidade])
+  const p = gerado[dia] || planoApi.dados
+  const c = curva.dados
+
+  const risco = base.riscos.find((r) => r.data === dia)
+  const diasOrdenados = [...base.riscos].sort((a, b) => a.data.localeCompare(b.data))
+  const eventos = c?.eventos || base.eventos.filter((e) => e.data === dia)
   const temRematricula = eventos.some((e) => e.tipo === 'rematricula')
+  const situacao = c ? situacaoDoNivel(c.nivel) : null
+  const plano = p?.plano
+  const tentativas = p?.tentativas || []
 
-  const dados = useMemo(() => {
-    const sem = curvaDoDia(dia)
-    const com = plano ? curvaDoDia(dia, COM_PLANO) : null
-    return sem.map((p, i) => ({ hora: p.hora, sem: p.carga, com: com ? com[i].carga : null }))
-  }, [dia, plano])
+  async function reescreverDicas() {
+    setReescrevendo(true)
+    const r = await api.gerarDicas(dia, unidade)
+    if (r.dados?.tarefas) setDicasNovas((d) => ({ ...d, [dia]: r.dados }))
+    setReescrevendo(false)
+  }
 
-  const picoSem = picoDoDia(dia)
-  const picoCom = plano ? picoDoDia(dia, COM_PLANO) : null
-  const mostraSem = !plano || vista !== 'com'
-  const mostraCom = Boolean(plano) && vista !== 'sem'
-  const teto = Math.ceil((Math.max(picoSem.carga, cap) * 1.15) / 100) * 100
-  const diasOrdenados = [...DIAS_RISCO].sort((a, b) => a.data.localeCompare(b.data))
-  const situacao = situacaoDaCarga(picoSem.carga, cap)
+  async function gerarPlano() {
+    setGerando(true)
+    const r = await api.gerarPlano(dia, unidade)
+    if (r.dados?.plano) setGerado((g) => ({ ...g, [dia]: r.dados }))
+    setGerando(false)
+  }
 
   return (
     <>
@@ -106,7 +153,7 @@ export default function DetalheDia({ dia, setDia }) {
           <h1>{longa(dia)}</h1>
           <div className="cab-dia-tags">
             {risco && <span className={`pill ${nivelDaGravidade(risco.gravidade).chave}`}>Gravidade {risco.gravidade} de 5</span>}
-            <span className={`pill ${situacao.chave}`}>{situacao.rotulo}</span>
+            {situacao && <span className={`pill ${situacao.chave}`}>{situacao.rotulo}</span>}
             {eventos.map((e) => (
               <ChipTipo key={e.descricao} tipo={e.tipo} hora={e.hora_inicio === '00:00' ? null : e.hora_inicio} texto={rotuloCurto(e.descricao)} />
             ))}
@@ -124,11 +171,11 @@ export default function DetalheDia({ dia, setDia }) {
           <div>
             <h2>Carga simultânea esperada</h2>
             <p>
-              Janelas de 15 minutos · sem plano, pico de {numero(picoSem.carga)} às {picoSem.hora}
-              {picoCom && ` · com plano, ${numero(picoCom.carga)} às ${picoCom.hora}`} · capacidade {cap}
+              Janelas de 15 minutos{c && ` · sem plano, pico de ${numero(c.pico.carga)} às ${c.pico.hora}`}
+              {p?.pico_com && ` · com plano, ${numero(p.pico_com.carga)} às ${p.pico_com.hora}`} · capacidade {cap} · Ctrl + rolagem para dar zoom
             </p>
           </div>
-          {plano && (
+          {p?.pontos_com && (
             <div className="segmentado" role="group" aria-label="Curvas exibidas">
               {[
                 ['sem', 'Sem plano'],
@@ -143,42 +190,17 @@ export default function DetalheDia({ dia, setDia }) {
           )}
         </div>
         <div className="card-corpo">
-          <div className="legenda" style={{ marginBottom: 6 }}>
-            {mostraSem && <span><i style={{ background: t.semPlano, height: 3 }} />Sem plano</span>}
-            {mostraCom && <span><i style={{ background: t.comPlano, height: 3 }} />Com plano</span>}
+          <div className="legenda" style={{ marginBottom: 2 }}>
+            {(!p?.pontos_com || vista !== 'com') && <span><i style={{ background: p?.pontos_com ? t.semPlano : t.teal, height: 3 }} />Sem plano</span>}
+            {p?.pontos_com && vista !== 'sem' && <span><i style={{ background: t.comPlano, height: 3 }} />Com plano (fila virtual segura na capacidade)</span>}
             <span><i className="linha" />Capacidade</span>
+            <span><i style={{ background: 'color-mix(in srgb, var(--ev-prova_online) 25%, transparent)' }} />janela de evento</span>
           </div>
-          <ResponsiveContainer width="100%" height={320}>
-            <ComposedChart data={dados} margin={{ top: 26, right: 16, bottom: 0, left: 0 }}>
-              <CartesianGrid vertical={false} stroke={t.grade} />
-              <XAxis dataKey="hora" interval={11} tick={{ fill: t.mudo, fontSize: 12 }} tickLine={false} axisLine={{ stroke: t.grade }} />
-              <YAxis domain={[0, teto]} tick={{ fill: t.mudo, fontSize: 12 }} tickLine={false} axisLine={false} width={44} />
-              <Tooltip content={<Dica cap={cap} />} cursor={{ stroke: t.mudo, strokeDasharray: '3 3' }} />
-              <ReferenceLine
-                y={cap}
-                stroke={t.critico}
-                strokeDasharray="6 4"
-                label={{ value: `capacidade ${cap}`, position: 'insideTopLeft', fill: t.critico, fontSize: 12 }}
-              />
-              {mostraSem && (
-                <Area type="monotone" dataKey="sem" name="Sem plano" stroke={t.semPlano} strokeWidth={2} fill={t.semPlano} fillOpacity={0.12} dot={false} activeDot={{ r: 4, stroke: t.superficie, strokeWidth: 2 }} isAnimationActive={false} />
-              )}
-              {mostraCom && (
-                <Line type="monotone" dataKey="com" name="Com plano" stroke={t.comPlano} strokeWidth={2.5} dot={false} activeDot={{ r: 4, stroke: t.superficie, strokeWidth: 2 }} isAnimationActive={false} />
-              )}
-              {mostraSem && picoSem.carga > cap && (
-                <ReferenceDot
-                  x={picoSem.hora}
-                  y={picoSem.carga}
-                  r={5}
-                  fill={t.semPlano}
-                  stroke={t.superficie}
-                  strokeWidth={2}
-                  label={{ value: `pico ${numero(picoSem.carga)}`, position: 'top', fill: t.texto, fontSize: 12, fontWeight: 600 }}
-                />
-              )}
-            </ComposedChart>
-          </ResponsiveContainer>
+          {c ? (
+            <CurvaDia pontos={c.pontos} pontosCom={p?.pontos_com} cap={cap} eventos={eventos} vista={vista} altura={340} />
+          ) : (
+            <div className="esq-bloco" style={{ height: 340 }} aria-busy="true" />
+          )}
         </div>
       </section>
 
@@ -187,25 +209,29 @@ export default function DetalheDia({ dia, setDia }) {
           <div className="card-cab">
             <div>
               <h2>Plano em 3 níveis</h2>
-              <p>Gerado pelo Gemini · só ações permitidas: vencimento e provas não mudam</p>
+              <p>Só ações permitidas: vencimento e provas não mudam · cada ação é recalculada pelo motor</p>
             </div>
+            {plano && <AvisoIA origem={p.origem || 'previa'} compacto />}
           </div>
           <div className="card-corpo">
-            {plano ? (
+            {planoApi.carregando && !p ? (
+              <div className="esq-bloco" style={{ height: 180 }} aria-busy="true" />
+            ) : plano ? (
               <div className="niveis">
-                <Nivel Icone={CalendarDays} titulo="Calendário" itens={plano.calendario} />
-                <Nivel Icone={Megaphone} titulo="Comunicação" itens={plano.comunicacao} />
-                <Nivel Icone={Server} titulo="Infraestrutura" itens={plano.infra_checklist} />
+                <Nivel Icone={CalendarDays} titulo="Calendário" itens={plano.calendario || []} />
+                <Nivel Icone={Megaphone} titulo="Comunicação" itens={plano.comunicacao || []} />
+                <Nivel Icone={Server} titulo="Infraestrutura" itens={plano.infra_checklist || []} />
               </div>
             ) : (
               <div className="vazio">
                 <b>Plano ainda não gerado para {curta(dia)}</b>
                 {temRematricula
                   ? 'As ações permitidas (notas, lembretes de pagamento e TI) não mexem na rematrícula. Esse caso depende de uma decisão de escopo.'
-                  : 'Na prévia, só 10/09 tem plano simulado. Com o backend, este botão chama evitar.gerar_plano.'}
+                  : 'Peça um plano: a IA propõe as ações e o motor recalcula a curva para validar.'}
                 <div style={{ marginTop: 14 }}>
-                  <button className="botao" disabled>
-                    <FileText size={16} aria-hidden="true" /> Gerar plano com Gemini
+                  <button className="botao primario" onClick={gerarPlano} disabled={gerando}>
+                    {gerando ? <span className="spinner claro" /> : <FileText size={16} aria-hidden="true" />}
+                    {gerando ? 'Gerando…' : 'Gerar plano com Gemini'}
                   </button>
                 </div>
               </div>
@@ -217,7 +243,7 @@ export default function DetalheDia({ dia, setDia }) {
           <div className="card-cab">
             <div>
               <h2>Validação do plano</h2>
-              <p>calculo/validacao.py · até 3 tentativas</p>
+              <p>O motor recalcula a carga de cada proposta · até 3 tentativas</p>
             </div>
           </div>
           <div className="card-corpo">
@@ -229,14 +255,14 @@ export default function DetalheDia({ dia, setDia }) {
                       {tt.ok ? <Check size={15} strokeWidth={3} aria-hidden="true" /> : <X size={15} strokeWidth={3} aria-hidden="true" />}
                     </span>
                     <div className="cabeca">
-                      Tentativa {tt.numero} <span>· {tt.ok ? 'aprovada' : 'reprovada e devolvida ao Gemini'}</span>
+                      Tentativa {tt.numero} <span>· {tt.ok ? 'aprovada' : 'reprovada e devolvida à IA'}</span>
                     </div>
                     <div className="proposta">{tt.proposta}</div>
                     {tt.erro && <div className="erro">{tt.erro}</div>}
                     {tt.checagens && (
                       <ul className="checagens">
-                        {tt.checagens.map((c) => (
-                          <li key={c}><Check size={14} strokeWidth={3} aria-hidden="true" />{c}</li>
+                        {tt.checagens.map((ch) => (
+                          <li key={ch}><Check size={14} strokeWidth={3} aria-hidden="true" />{ch}</li>
                         ))}
                       </ul>
                     )}
@@ -250,7 +276,11 @@ export default function DetalheDia({ dia, setDia }) {
         </section>
       </div>
 
-      {crise && <ModalCrise dia={dia} onFechar={() => setCrise(false)} />}
+      {(dicasNovas[dia] || dicas.dados) && (
+        <Manutencao dicas={dicasNovas[dia] || dicas.dados} reescrever={reescreverDicas} reescrevendo={reescrevendo} />
+      )}
+
+      {crise && <ModalCrise dia={dia} unidade={unidade} onFechar={() => setCrise(false)} />}
     </>
   )
 }
