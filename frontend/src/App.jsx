@@ -4,6 +4,7 @@ import { CONTEXTO, DIAS_RISCO, picoDoDia } from './dados/previa'
 import { UNIDADE_PADRAO, UNIDADES, unidadePorId } from './dados/unidades'
 import { temaEscuroAtivo } from './tema'
 import Overview from './telas/Overview'
+import Calendario from './telas/Calendario'
 import DiasRisco from './telas/DiasRisco'
 import DetalheDia from './telas/DetalheDia'
 import ProvaCarga from './telas/ProvaCarga'
@@ -11,6 +12,7 @@ import { numero } from './util'
 
 const TABS = [
   { chave: 'visao', nome: 'Visão geral' },
+  { chave: 'calendario', nome: 'Calendário' },
   { chave: 'riscos', nome: 'Dias críticos' },
   { chave: 'dia', nome: 'Plano do dia' },
   { chave: 'carga', nome: 'Prova de carga' },
@@ -28,7 +30,7 @@ function telaDoHash() {
 
 export default function App() {
   const [tela, setTela] = useState(telaDoHash)
-  const [dia, setDia] = useState('2027-03-10')
+  const [dia, setDia] = useState('2026-09-10')
   const [unidadeId, setUnidadeId] = useState(UNIDADE_PADRAO.id)
   const [escuro, setEscuro] = useState(temaEscuroAtivo)
   const unidade = unidadePorId(unidadeId)
@@ -114,6 +116,7 @@ export default function App() {
 
       <main className="pagina">
         {tela === 'visao' && <Overview unidade={unidade} abrirDia={abrirDia} />}
+        {tela === 'calendario' && <Calendario abrirDia={abrirDia} />}
         {tela === 'riscos' && <DiasRisco abrirDia={abrirDia} />}
         {tela === 'dia' && <DetalheDia dia={dia} setDia={setDia} />}
         {tela === 'carga' && <ProvaCarga />}

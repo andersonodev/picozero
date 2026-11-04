@@ -1,21 +1,26 @@
 // frontend/src/dados/previa.js
-// DADOS DE PRÉVIA: servem só para visualizar as telas antes do backend existir.
-// O formato é o mesmo dos schemas Pydantic (Evento, DiaRisco, Plano, Comunicado).
+// DADOS DE PRÉVIA ancorados no CALENDÁRIO ACADÊMICO REAL do Ibmec RJ 2026.2.
+// As datas de feriados, provas (AP1/AP2/AS), Teste de Progresso, rematrícula e
+// vencimento (sempre dia 10) vêm do calendário oficial. O histórico de acesso e as
+// curvas de carga são MODELADOS (ver aba Fonte de dados). Formato = schemas Pydantic.
 // Na E9 este arquivo sai e as telas passam a chamar /api.
 
 export const CONTEXTO = {
-  instituicao: 'Ibmec',
-  semestre: '2027.1',
+  instituicao: 'Ibmec RJ',
+  semestre: '2026.2',
   alunos: 8000,
   capacidade: 500,
-  inicio: '2027-02-15',
-  fim: '2027-07-02',
+  inicio: '2026-08-03', // início do período letivo (veteranos)
+  fim: '2026-12-07',    // conclusão do período letivo às 10h
   modelo: 'gemini-flash',
+  // Feriados e recessos reais dentro da janela do semestre.
   feriados: [
-    { data: '2027-03-26', nome: 'Sexta-feira Santa' },
-    { data: '2027-04-21', nome: 'Tiradentes' },
-    { data: '2027-04-23', nome: 'São Jorge (RJ)' },
-    { data: '2027-05-27', nome: 'Corpus Christi' },
+    { data: '2026-09-07', nome: 'Independência do Brasil' },
+    { data: '2026-10-12', nome: 'Nossa Senhora Aparecida' },
+    { data: '2026-10-15', nome: 'Dia do Professor (recesso)' },
+    { data: '2026-11-02', nome: 'Finados' },
+    { data: '2026-11-15', nome: 'Proclamação da República' },
+    { data: '2026-11-20', nome: 'Consciência Negra' },
   ],
 }
 
@@ -24,102 +29,113 @@ export const TIPOS = {
   vencimento: 'Vencimento',
   notas: 'Notas',
   rematricula: 'Rematrícula',
-  outro: 'Outro',
+  outro: 'Acadêmico',
 }
 
 const ALUNOS_POR_TURMA = 60
 
-export const EVENTOS = [
-  { data: '2027-02-15', hora_inicio: '08:00', hora_fim: '22:00', tipo: 'outro', descricao: 'Início das aulas 2027.1', turmas: [] },
-  { data: '2027-02-26', hora_inicio: '09:00', hora_fim: '18:00', tipo: 'outro', descricao: 'Último dia de ajuste de matrícula', turmas: [] },
-  { data: '2027-03-10', hora_inicio: '00:00', hora_fim: '23:59', tipo: 'vencimento', descricao: 'Vencimento da mensalidade de março', turmas: [] },
-  { data: '2027-03-10', hora_inicio: '18:00', hora_fim: '23:59', tipo: 'notas', descricao: 'Divulgação das notas do Simulado Integrado', turmas: [] },
-  { data: '2027-03-10', hora_inicio: '19:00', hora_fim: '21:00', tipo: 'prova_online', descricao: 'AV1 online de Gestão e Economia', turmas: ['ADM-1A', 'ADM-1B', 'ADM-2A', 'ECO-1A', 'ECO-2A'] },
-  { data: '2027-03-11', hora_inicio: '19:00', hora_fim: '21:00', tipo: 'prova_online', descricao: 'AV1 online de Cálculo I', turmas: ['ENG-1A', 'ENG-1B'] },
-  { data: '2027-03-17', hora_inicio: '19:00', hora_fim: '21:00', tipo: 'prova_online', descricao: 'AV1 online de Direito', turmas: ['DIR-1A', 'DIR-3A'] },
-  { data: '2027-04-05', hora_inicio: '14:00', hora_fim: '23:59', tipo: 'notas', descricao: 'Divulgação das notas da AV1', turmas: [] },
-  { data: '2027-04-12', hora_inicio: '00:00', hora_fim: '23:59', tipo: 'vencimento', descricao: 'Vencimento da mensalidade de abril (10/04 cai no sábado)', turmas: [] },
-  { data: '2027-04-28', hora_inicio: '19:00', hora_fim: '21:00', tipo: 'prova_online', descricao: 'Prova online de Relações Internacionais', turmas: ['RI-2A'] },
-  { data: '2027-05-10', hora_inicio: '00:00', hora_fim: '23:59', tipo: 'vencimento', descricao: 'Vencimento da mensalidade de maio', turmas: [] },
-  { data: '2027-05-10', hora_inicio: '19:00', hora_fim: '21:00', tipo: 'prova_online', descricao: 'AV2 online de Cálculo e Estatística', turmas: ['ENG-1A', 'ENG-1B', 'ADM-2A', 'ECO-1A', 'CDC-1A'] },
-  { data: '2027-05-10', hora_inicio: '21:00', hora_fim: '23:59', tipo: 'notas', descricao: 'Divulgação das notas dos trabalhos (N2)', turmas: [] },
-  { data: '2027-06-10', hora_inicio: '00:00', hora_fim: '23:59', tipo: 'vencimento', descricao: 'Vencimento da mensalidade de junho', turmas: [] },
-  { data: '2027-06-14', hora_inicio: '09:00', hora_fim: '23:59', tipo: 'rematricula', descricao: 'Abertura da rematrícula 2027.2', turmas: [] },
-  { data: '2027-06-14', hora_inicio: '10:00', hora_fim: '12:00', tipo: 'prova_online', descricao: 'AV2 online de Direito e Relações Internacionais', turmas: ['DIR-1A', 'DIR-3A', 'RI-2A', 'RI-4A'] },
-  { data: '2027-06-21', hora_inicio: '14:00', hora_fim: '23:59', tipo: 'notas', descricao: 'Divulgação das notas finais', turmas: [] },
-  { data: '2027-07-02', hora_inicio: '18:00', hora_fim: '22:00', tipo: 'outro', descricao: 'Encerramento do semestre', turmas: [] },
+// Períodos do calendário (bandas na tela de Calendário). Não geram carga pontual.
+export const MARCOS = [
+  { inicio: '2026-08-03', fim: '2026-09-11', nome: 'Renovação de matrícula online', tipo: 'rematricula' },
+  { inicio: '2026-09-24', fim: '2026-09-30', nome: 'Avaliações Parciais AP1', tipo: 'prova_online' },
+  { inicio: '2026-10-05', fim: '2026-10-09', nome: 'Mostra de Iniciação Científica', tipo: 'outro' },
+  { inicio: '2026-11-12', fim: '2026-11-18', nome: 'Avaliações Parciais AP2', tipo: 'prova_online' },
+  { inicio: '2026-11-27', fim: '2026-11-28', nome: 'Vestibular Ibmec 2027.1', tipo: 'outro' },
+  { inicio: '2026-11-25', fim: '2026-12-03', nome: 'Avaliações Substitutivas AS', tipo: 'prova_online' },
 ]
 
-// O que o Gemini devolve em analisar_riscos (texto simulado na prévia).
+// Turmas de Teste de Progresso e AP2 online (muitos alunos simultâneos).
+const TURMAS_TP = ['ADM-1A','ADM-1B','ADM-3A','ECO-1A','ECO-3A','ENG-1A','DIR-1A','DIR-3A','RI-1A','CDC-1A']
+const TURMAS_AP2 = ['ADM-2A','ADM-2B','ECO-2A','ENG-1A','ENG-1B','ENG-2A','CDC-1A','DIR-2A','RI-2A','RI-4A','CCO-1A']
+
+export const EVENTOS = [
+  { data: '2026-08-03', hora_inicio: '08:00', hora_fim: '22:00', tipo: 'outro', descricao: 'Início do período letivo (veteranos)', turmas: [] },
+  { data: '2026-08-10', hora_inicio: '00:00', hora_fim: '23:59', tipo: 'vencimento', descricao: 'Vencimento da 2ª parcela da semestralidade', turmas: [] },
+  { data: '2026-08-10', hora_inicio: '08:00', hora_fim: '22:00', tipo: 'outro', descricao: 'Início do período letivo (calouros)', turmas: [] },
+  { data: '2026-09-10', hora_inicio: '00:00', hora_fim: '23:59', tipo: 'vencimento', descricao: 'Vencimento da 3ª parcela da semestralidade', turmas: [] },
+  { data: '2026-09-10', hora_inicio: '09:00', hora_fim: '18:00', tipo: 'prova_online', descricao: 'Aplicação do Teste de Progresso', turmas: TURMAS_TP },
+  { data: '2026-09-10', hora_inicio: '18:00', hora_fim: '23:59', tipo: 'notas', descricao: 'Divulgação de notas da Avaliação Contínua (AC)', turmas: [] },
+  { data: '2026-09-11', hora_inicio: '09:00', hora_fim: '23:59', tipo: 'rematricula', descricao: 'Fim da renovação de matrícula online 2026.2', turmas: [] },
+  { data: '2026-09-11', hora_inicio: '09:00', hora_fim: '18:00', tipo: 'outro', descricao: 'Fim dos prazos de ajuste de disciplinas pelo portal', turmas: [] },
+  { data: '2026-09-24', hora_inicio: '19:00', hora_fim: '21:00', tipo: 'prova_online', descricao: 'AP1 online · início do período', turmas: ['ADM-1A','ADM-1B','ECO-1A'] },
+  { data: '2026-10-10', hora_inicio: '00:00', hora_fim: '23:59', tipo: 'vencimento', descricao: 'Vencimento da 4ª parcela (10/10 cai no sábado)', turmas: [] },
+  { data: '2026-10-13', hora_inicio: '14:00', hora_fim: '23:59', tipo: 'notas', descricao: 'Divulgação de notas das Avaliações Parciais AP1', turmas: [] },
+  { data: '2026-11-10', hora_inicio: '00:00', hora_fim: '23:59', tipo: 'vencimento', descricao: 'Vencimento da 5ª parcela da semestralidade', turmas: [] },
+  { data: '2026-11-12', hora_inicio: '19:00', hora_fim: '21:00', tipo: 'prova_online', descricao: 'Abertura da AP2 online', turmas: TURMAS_AP2 },
+  { data: '2026-11-12', hora_inicio: '21:00', hora_fim: '23:59', tipo: 'notas', descricao: 'Prazo final de notas da Avaliação Contínua (AC)', turmas: [] },
+  { data: '2026-12-03', hora_inicio: '14:00', hora_fim: '23:59', tipo: 'notas', descricao: 'Divulgação de notas finais (AS e Teste de Progresso)', turmas: [] },
+  { data: '2026-12-07', hora_inicio: '08:00', hora_fim: '12:00', tipo: 'outro', descricao: 'Conclusão do período letivo 2026.2', turmas: [] },
+]
+
+// list[DiaRisco] — gravidade, eventos e motivo escritos pelo Gemini; pico calculado pelo código.
 export const DIAS_RISCO = [
   {
-    data: '2027-03-10',
+    data: '2026-09-10',
     gravidade: 5,
-    eventos: ['Vencimento da mensalidade de março', 'Divulgação das notas do Simulado Integrado', 'AV1 online de Gestão e Economia'],
+    eventos: ['Vencimento da 3ª parcela da semestralidade', 'Aplicação do Teste de Progresso', 'Divulgação de notas da Avaliação Contínua (AC)'],
     motivo:
-      'Três gatilhos se somam no mesmo fim de tarde. As notas saem às 18h, a AV1 online coloca cinco turmas no portal às 19h e o vencimento concentra pagamentos entre 20h e 23h59. Nos vencimentos de 10/09/2026 e 10/03/2026 o portal já passava de 340 acessos simultâneos só com os pagamentos.',
-    consultados: ['2026-09-10', '2026-03-10', '2026-04-06'],
+      'Três gatilhos reais no mesmo dia. O Teste de Progresso ocupa o portal com muitas turmas das 9h às 18h, as notas da AC saem às 18h e o vencimento concentra pagamentos entre 20h e 23h59. Nos vencimentos de 10/03/2026 e 10/06/2026 o portal já passava de 340 acessos simultâneos só com os pagamentos.',
+    consultados: ['2026-06-10', '2026-03-10', '2025-09-10'],
   },
   {
-    data: '2027-05-10',
+    data: '2026-11-12',
     gravidade: 5,
-    eventos: ['Vencimento da mensalidade de maio', 'AV2 online de Cálculo e Estatística', 'Divulgação das notas dos trabalhos (N2)'],
+    eventos: ['Abertura da AP2 online', 'Prazo final de notas da Avaliação Contínua (AC)', 'Resíduo do vencimento de 10/11'],
     motivo:
-      'As notas saem às 21h, no minuto em que a AV2 online termina e quando os pagamentos do vencimento entram na reta final. No histórico, a divulgação de notas de 06/04/2026 dobrou os acessos em menos de 15 minutos.',
-    consultados: ['2026-04-06', '2025-11-10'],
+      'A AP2 online abre às 19h com treze turmas, o prazo de notas da AC vence no mesmo dia e os pagamentos atrasados do vencimento de 10/11 ainda chegam. No histórico, a abertura de provas online dobrou os acessos em menos de 15 minutos.',
+    consultados: ['2026-05-12', '2025-11-13'],
   },
   {
-    data: '2027-06-14',
+    data: '2026-09-11',
     gravidade: 4,
-    eventos: ['Abertura da rematrícula 2027.2', 'AV2 online de Direito e Relações Internacionais'],
+    eventos: ['Fim da renovação de matrícula online 2026.2', 'Fim dos prazos de ajuste de disciplinas pelo portal'],
     motivo:
-      'Colisão discreta: a rematrícula abre às 9h e puxa a base inteira nas primeiras horas, e uma hora depois quatro turmas entram para a AV2 online. Em 15/06/2026 a abertura da rematrícula sozinha manteve o portal acima de 300 acessos até as 11h.',
-    consultados: ['2026-06-15', '2025-12-14'],
+      'Colisão discreta: não tem prova nem vencimento, mas é o último dia da rematrícula e de vários ajustes de disciplina. A base inteira tenta resolver tudo nas primeiras horas. Em 11/09/2025 a véspera do fim da renovação manteve o portal acima de 300 acessos das 9h às 11h.',
+    consultados: ['2025-09-11', '2026-03-31'],
   },
   {
-    data: '2027-06-21',
+    data: '2026-12-03',
     gravidade: 3,
-    eventos: ['Divulgação das notas finais'],
+    eventos: ['Divulgação de notas finais (AS e Teste de Progresso)'],
     motivo:
-      'Notas finais costumam gerar o maior salto isolado do semestre, mas sem outro evento no mesmo horário a carga fica abaixo da capacidade.',
-    consultados: ['2026-06-22'],
+      'As notas finais costumam gerar o maior salto isolado do semestre, mas sem prova ou vencimento no mesmo horário a carga fica perto do limite, não acima.',
+    consultados: ['2026-07-03'],
   },
   {
-    data: '2027-04-05',
+    data: '2026-10-13',
+    gravidade: 3,
+    eventos: ['Divulgação de notas das Avaliações Parciais AP1'],
+    motivo: 'Salto previsível às 14h, logo após o feriado de 12/10, sem sobreposição com prova ou vencimento.',
+    consultados: ['2026-05-13'],
+  },
+  {
+    data: '2026-11-10',
     gravidade: 2,
-    eventos: ['Divulgação das notas da AV1'],
-    motivo: 'Salto previsível às 14h, sem sobreposição com prova ou vencimento.',
+    eventos: ['Vencimento da 5ª parcela da semestralidade'],
+    motivo: 'Vencimento isolado. A concentração das 22h fica dentro da capacidade, mas a AP2 abre dois dias depois: semana sem folga.',
     consultados: [],
   },
   {
-    data: '2027-04-12',
+    data: '2026-08-10',
     gravidade: 2,
-    eventos: ['Vencimento da mensalidade de abril (10/04 cai no sábado)'],
-    motivo: 'Vencimento isolado. A concentração das 22h fica dentro da capacidade.',
-    consultados: [],
-  },
-  {
-    data: '2027-06-10',
-    gravidade: 2,
-    eventos: ['Vencimento da mensalidade de junho'],
-    motivo: 'Vencimento isolado, mesmo padrão de abril.',
+    eventos: ['Vencimento da 2ª parcela da semestralidade', 'Início do período letivo (calouros)'],
+    motivo: 'Vencimento somado à primeira entrada dos calouros. Fica abaixo da capacidade.',
     consultados: [],
   },
 ]
 
 // Trilha das chamadas ao Gemini (o que o cliente.py registra).
 export const TRILHA_GEMINI = [
-  { hora: '11:42:08', etapa: 'Files API', detalhe: 'upload de calendario_2027-1.pdf (3 páginas)', tokens: null, tempo: '0,9 s' },
-  { hora: '11:42:11', etapa: 'extrair_eventos', detalhe: 'response_schema list[Evento] · temperature 0 · 18 eventos', tokens: 6204, tempo: '2,8 s' },
-  { hora: '11:42:15', etapa: 'analisar_riscos', detalhe: 'tools=[consultar_historico] · temperature 0.2', tokens: 9870, tempo: '4,1 s' },
-  { hora: '11:42:16', etapa: 'consultar_historico', detalhe: '2026-09-10 → pico 352 às 22h45', ferramenta: true },
-  { hora: '11:42:16', etapa: 'consultar_historico', detalhe: '2026-03-10 → pico 341 às 23h00', ferramenta: true },
-  { hora: '11:42:17', etapa: 'consultar_historico', detalhe: '2026-04-06 → salto de 96 para 412 às 14h', ferramenta: true },
-  { hora: '11:42:17', etapa: 'consultar_historico', detalhe: '2026-06-15 → 300+ das 9h às 11h', ferramenta: true },
-  { hora: '11:42:18', etapa: 'consultar_historico', detalhe: '2025-11-10 → pico 337 às 22h30', ferramenta: true },
-  { hora: '11:42:18', etapa: 'consultar_historico', detalhe: '2025-12-14 → abertura de rematrícula', ferramenta: true },
-  { hora: '11:42:19', etapa: 'consultar_historico', detalhe: '2026-06-22 → notas finais', ferramenta: true },
-  { hora: '11:42:21', etapa: 'formatar_riscos', detalhe: 'response_schema list[DiaRisco] · 7 dias', tokens: 2310, tempo: '1,9 s' },
+  { hora: '10:18:04', etapa: 'Files API', detalhe: 'upload de CALENDARIO_ACADEMICO_26_2_RJ.pdf (1 página)', tokens: null, tempo: '0,8 s' },
+  { hora: '10:18:07', etapa: 'extrair_eventos', detalhe: 'response_schema list[Evento] · temperature 0 · 16 eventos', tokens: 5980, tempo: '2,7 s' },
+  { hora: '10:18:11', etapa: 'analisar_riscos', detalhe: 'tools=[consultar_historico] · temperature 0.2', tokens: 9410, tempo: '4,0 s' },
+  { hora: '10:18:12', etapa: 'consultar_historico', detalhe: '2026-06-10 → pico 352 às 22h45', ferramenta: true },
+  { hora: '10:18:12', etapa: 'consultar_historico', detalhe: '2026-03-10 → pico 341 às 23h00', ferramenta: true },
+  { hora: '10:18:13', etapa: 'consultar_historico', detalhe: '2025-09-10 → Teste de Progresso, 480 às 10h', ferramenta: true },
+  { hora: '10:18:13', etapa: 'consultar_historico', detalhe: '2026-05-12 → abertura de AP2, 430 às 19h', ferramenta: true },
+  { hora: '10:18:14', etapa: 'consultar_historico', detalhe: '2025-09-11 → fim da rematrícula, 300+ às 10h', ferramenta: true },
+  { hora: '10:18:14', etapa: 'consultar_historico', detalhe: '2026-07-03 → notas finais', ferramenta: true },
+  { hora: '10:18:16', etapa: 'formatar_riscos', detalhe: 'response_schema list[DiaRisco] · 7 dias', tokens: 2240, tempo: '1,8 s' },
 ]
 
 // ---------- Modelo de carga (espelho simplificado do calculo/carga.py) ----------
@@ -190,68 +206,70 @@ export function picoDoDia(data, opcoes) {
   return curvaDoDia(data, opcoes).reduce((a, b) => (b.carga > a.carga ? b : a))
 }
 
-// ---------- Evitar: plano + tentativas de validação (só 10/03 na prévia) ----------
+// ---------- Evitar: plano + tentativas de validação (10/09 na prévia) ----------
+
+const DIA_PLANO = '2026-09-10'
 
 export const PLANOS = {
-  '2027-03-10': {
+  [DIA_PLANO]: {
     calendario: [
-      { titulo: 'Notas do Simulado em 4 lotes no dia seguinte', detalhe: '11/03: Gestão às 9h, Economia às 10h30, Direito às 12h e Engenharia às 13h30. Nenhum lote encosta na AV1 de Cálculo das 19h.' },
+      { titulo: 'Notas da AC em 4 lotes no dia seguinte', detalhe: '11/09: Gestão às 9h, Economia às 10h30, Direito às 12h e Engenharia às 13h30. Nenhum lote encosta no pico da rematrícula de 11/09.' },
     ],
     comunicacao: [
-      { titulo: 'Grupo A · 2.700 alunos', detalhe: 'Lembrete de pagamento em 05/03 às 10h (quem costuma pagar cedo).' },
-      { titulo: 'Grupo B · 2.700 alunos', detalhe: 'Lembrete em 08/03 às 12h, com Pix e boleto no corpo da mensagem.' },
-      { titulo: 'Grupo C · 2.600 alunos', detalhe: 'Lembrete em 09/03 às 9h para quem paga no dia. O vencimento continua 10/03.' },
-      { titulo: 'Turmas da AV1', detalhe: 'Aviso em 09/03: a prova abre às 19h, não recarregue a página e use a fila se ela aparecer.' },
+      { titulo: 'Grupo A · 2.700 alunos', detalhe: 'Lembrete da 3ª parcela em 05/09 às 10h (quem costuma pagar cedo).' },
+      { titulo: 'Grupo B · 2.700 alunos', detalhe: 'Lembrete em 08/09 às 12h, com Pix e boleto no corpo da mensagem.' },
+      { titulo: 'Grupo C · 2.600 alunos', detalhe: 'Lembrete em 09/09 às 9h para quem paga no dia. O vencimento continua 10/09.' },
+      { titulo: 'Turmas do Teste de Progresso', detalhe: 'Aviso em 09/09: a prova abre às 9h, não recarregue a página e use a fila se ela aparecer.' },
     ],
     infra_checklist: [
-      { titulo: 'Escalar o portal até 17h de 10/03', detalhe: 'Pico previsto às 19h. Escala desfeita às 0h30.' },
-      { titulo: 'Congelar deploys e manutenções', detalhe: 'De 08/03 a 12/03.' },
-      { titulo: 'Fila virtual de login', detalhe: 'Ligada das 18h às 23h59 de 10/03.' },
-      { titulo: 'Plantão de TI e atendimento', detalhe: 'Das 18h às 0h, com o comunicado de crise pré-aprovado.' },
+      { titulo: 'Escalar o portal até 8h de 10/09', detalhe: 'O Teste de Progresso começa às 9h; o segundo pico é à noite no vencimento. Escala desfeita às 0h30.' },
+      { titulo: 'Congelar deploys e manutenções', detalhe: 'De 08/09 a 12/09.' },
+      { titulo: 'Fila virtual de login', detalhe: 'Ligada das 8h30 às 18h (Teste de Progresso) e das 20h às 23h59 (vencimento).' },
+      { titulo: 'Plantão de TI e atendimento', detalhe: 'Das 8h às 0h, com o comunicado de crise pré-aprovado.' },
     ],
   },
 }
 
 export const TENTATIVAS = {
-  '2027-03-10': [
+  [DIA_PLANO]: [
     {
       numero: 1,
       ok: false,
-      proposta: 'Liberar as notas às 22h de 10/03, depois da prova.',
-      erro: 'A carga recalculada às 22h fica em 739, acima da capacidade de 500: o horário coincide com a reta final dos pagamentos.',
+      proposta: 'Liberar as notas da AC às 22h de 10/09, depois do Teste de Progresso.',
+      erro: 'A carga recalculada às 22h fica em 739, acima da capacidade de 500: o horário coincide com a reta final dos pagamentos da 3ª parcela.',
     },
     {
       numero: 2,
       ok: false,
-      proposta: 'Notas em lotes no dia 11/03, último lote às 19h.',
-      erro: 'O lote das 19h de 11/03 conflita com a AV1 online de Cálculo I (ENG-1A, ENG-1B).',
+      proposta: 'Notas em lotes em 11/09, último lote às 10h.',
+      erro: 'O lote das 10h de 11/09 cai no pico do fim da renovação de matrícula, que já é um dia de risco (gravidade 4).',
     },
     {
       numero: 3,
       ok: true,
-      proposta: 'Notas em 4 lotes em 11/03 entre 9h e 13h30, lembretes de pagamento em 3 grupos e checklist de TI.',
+      proposta: 'Notas da AC em 4 lotes em 11/09 das 12h às 15h, lembretes da 3ª parcela em 3 grupos e checklist de TI.',
       checagens: [
         'Nenhuma ação cai em feriado',
         'Nenhuma ação conflita com prova online',
         'Nenhuma carga foi empurrada para outro dia crítico',
-        'Pico recalculado 483 às 19h (97% da capacidade)',
+        'Pico recalculado 486 às 10h (97% da capacidade)',
       ],
     },
   ],
 }
 
-// ---------- Reagir: comunicado de crise ----------
+// ---------- Reagir: crise ----------
 
-export const FALHA_EXEMPLO = 'Portal do aluno fora do ar das 19h05 às 19h50 de 10/03, durante a AV1 online e no dia do vencimento.'
+export const FALHA_EXEMPLO = 'Portal do aluno fora do ar das 10h05 às 10h50 de 10/09, durante a aplicação do Teste de Progresso e no dia do vencimento.'
 
 export const COMUNICADO = {
-  titulo: 'Instabilidade no portal em 10/03: prazos estendidos',
+  titulo: 'Instabilidade no portal em 10/09: prazos estendidos',
   mensagem:
-    'Entre 19h05 e 19h50 de hoje, o portal do aluno ficou instável. Sabemos que isso aconteceu num momento importante, com a AV1 online e o vencimento da mensalidade no mesmo dia. Ninguém será prejudicado: as respostas já enviadas estão salvas e os prazos abaixo foram ajustados.',
-  nova_data_prazo: '2027-03-12',
+    'Entre 10h05 e 10h50 de hoje, o portal do aluno ficou instável. Sabemos que isso aconteceu num momento importante, com o Teste de Progresso em andamento e o vencimento da mensalidade no mesmo dia. Ninguém será prejudicado: as respostas já enviadas estão salvas e os prazos abaixo foram ajustados.',
+  nova_data_prazo: '2026-09-12',
   regras_tolerancia: [
-    'Mensalidades de março pagas até 12/03 não terão multa nem juros.',
-    'Quem não conseguiu concluir a AV1 online fará a prova em nova janela em 11/03, das 19h às 21h.',
+    'Mensalidades de setembro pagas até 12/09 não terão multa nem juros.',
+    'Quem não concluiu o Teste de Progresso fará a prova em nova janela em 11/09, das 10h às 12h.',
     'Respostas enviadas antes da falha foram salvas e não precisam ser refeitas.',
     'Não é preciso abrir chamado: a tolerância é aplicada automaticamente.',
   ],
@@ -259,6 +277,8 @@ export const COMUNICADO = {
 
 // ---------- Prova de carga (forma da saída de carga/comparar.py) ----------
 
+const DIA_PICO = '2026-09-10'
+const DIA_CONTROLE = '2026-08-18' // terça tranquila, sem eventos
 const BASE_MS = 120
 
 function ruido(i) {
@@ -266,9 +286,9 @@ function ruido(i) {
 }
 
 export function seriesLatencia() {
-  const antes = curvaDoDia('2027-03-10')
-  const depois = curvaDoDia('2027-03-10', { notasMovidas: true, lembretesEscalonados: true })
-  const controle = curvaDoDia('2027-03-03')
+  const antes = curvaDoDia(DIA_PICO)
+  const depois = curvaDoDia(DIA_PICO, { notasMovidas: true, lembretesEscalonados: true })
+  const controle = curvaDoDia(DIA_CONTROLE)
   const cap = CONTEXTO.capacidade
   return antes.map((p, i) => {
     const ua = p.carga
@@ -290,8 +310,8 @@ export function resumoLatencia() {
   const pico = (chave) => Math.max(...s.map((p) => p[chave]))
   const erroPico = Math.max(...s.map((p) => p.erroAntes))
   return [
-    { chave: 'antes', nome: 'Antes', sub: '10/03 · perfil original · sem fila', p95: pico('antes'), p50: Math.round(pico('antes') * 0.46), erros: erroPico },
-    { chave: 'depois', nome: 'Depois', sub: '10/03 · plano aplicado · fila ligada', p95: pico('depois'), p50: Math.round(pico('depois') * 0.55), erros: 0 },
-    { chave: 'controle', nome: 'Controle', sub: '03/03 · dia tranquilo · sem plano', p95: pico('controle'), p50: Math.round(pico('controle') * 0.6), erros: 0 },
+    { chave: 'antes', nome: 'Antes', sub: '10/09 · perfil original · sem fila', p95: pico('antes'), p50: Math.round(pico('antes') * 0.46), erros: erroPico },
+    { chave: 'depois', nome: 'Depois', sub: '10/09 · plano aplicado · fila ligada', p95: pico('depois'), p50: Math.round(pico('depois') * 0.55), erros: 0 },
+    { chave: 'controle', nome: 'Controle', sub: '18/08 · dia tranquilo · sem plano', p95: pico('controle'), p50: Math.round(pico('controle') * 0.6), erros: 0 },
   ]
 }
