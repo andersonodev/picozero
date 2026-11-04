@@ -10,7 +10,7 @@ import statistics
 from .. import contexto
 from ..armazem import Armazem
 from ..config import DADOS
-from ..fmt import inteiro
+from ..fmt import decimal, inteiro
 from .previsao import Motor
 
 ARQUIVO_PADRAO = DADOS / "publico_estudante_ibmec_br.json"
@@ -84,8 +84,8 @@ def validar(motor: Motor, armazem: Armazem, unidade: str, dominio: str | None = 
         "fatores_modelo": motor.calibracao(unidade).fatores,
         "leitura": (
             f"Só com calendário, feriados e períodos, o motor acompanha a sazonalidade real do {pub['dominio']} "
-            f"com correlação {r:.2f}".replace(".", ",")
-            + (f" ({melhor[0]:.2f} com a tendência de adoção de {melhor[1] * 100:.0f}%/mês)".replace(".", ",") if melhor[1] else "")
+            f"com correlação {decimal(r or 0, 2)}"
+            + (f" ({decimal(melhor[0], 2)} com a tendência de adoção de {round(melhor[1] * 100)}%/mês)" if melhor[1] else "")
             + f". Maior desvio em {pior['mes']} ({pior['erro_pct']:+d}%). Nível absoluto: o painel público indica "
             f"~{inteiro(concorrencia_media or 0)} sessões simultâneas em média no domínio; ele subestima tráfego autenticado, "
             "então o nível de produção vem do export do APM quando liberado."

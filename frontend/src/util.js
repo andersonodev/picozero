@@ -79,3 +79,8 @@ export function rotuloCurto(descricao) {
 export function capitalizar(texto) {
   return texto.charAt(0).toUpperCase() + texto.slice(1)
 }
+
+// Escapa texto para os tooltips HTML do ECharts (descrições podem vir de ingestão externa).
+export function esc(texto) {
+  return String(texto ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c])
+}
