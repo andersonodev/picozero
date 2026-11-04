@@ -3,6 +3,7 @@
 # cadeia de modelos (404/429 → próximo), retry com backoff do próprio SDK, timeout, teto diário,
 # cache das respostas estruturadas e trilha de auditoria de cada chamada e de cada ferramenta.
 # Sem GEMINI_API_KEY (ou sem cota) `gerar` devolve None e quem chamou usa as regras determinísticas.
+import concurrent.futures
 import hashlib
 import json
 import threading
@@ -25,6 +26,9 @@ except ImportError:  # pragma: no cover - o SDK é dependência, mas o motor rod
     genai = None
 
 
+_EXECUTOR = concurrent.futures.ThreadPoolExecutor(max_workers=8, thread_name_prefix="gemini")
+
+
 @dataclass
 class RespostaIA:
     texto: str
@@ -34,6 +38,8 @@ class RespostaIA:
     tempo_ms: int = 0
     cache: bool = False
     chamadas: list[dict] = field(default_factory=list)
+    # Tudo o que as ferramentas devolveram nesta resposta (base para conferir os números do texto).
+    resultados: list[Any] = field(default_factory=list)
 
 
 def _resumo(valor: Any, limite: int = 160) -> str:
@@ -57,9 +63,14 @@ class ClienteGemini:
         self.armazem = armazem
         self._cliente = None
         self._modelo_ok: str | None = None
+        # Último modelo que respondeu em cada cadeia (o chat tem a sua) e quando passou a ser ele.
+        self._fixos: dict[tuple[str, ...], tuple[str, float]] = {}
         self._trava = threading.Lock()
         self._uso: tuple[date, int] = (date.today(), 0)
         self.ultimo_erro: str | None = None
+        # Modelos que deram 429 (sem cota) ou 404 (não existe) ficam de fora até este instante (monotonic).
+        # Sem isso, cada pergunta gastava 4 ou 5 tentativas perdidas antes de chegar num modelo que responde.
+        self._esgotados: dict[str, float] = {}
 
     # ---------- estado ----------
 
@@ -86,6 +97,7 @@ class ClienteGemini:
             "modelo": self.modelo,
             "cadeia": CONFIG.gemini_modelos,
             "chamadas_hoje": n if dia == date.today() else 0,
+            "pulando": sorted(m for m, ate in self._esgotados.items() if ate > time.monotonic()),
             "limite_diario": CONFIG.ia_limite_diario,
             "ultimo_erro": self.ultimo_erro,
         }
@@ -151,6 +163,8 @@ class ClienteGemini:
         usar_cache: bool = True,
         max_chamadas: int = 10,
         prazo_s: float = 45.0,
+        modelos: list[str] | None = None,
+        pensamento: str | None = None,
     ) -> RespostaIA | None:
         """Chama o Gemini. Devolve None quando não há chave, cota ou resposta válida (use o fallback)."""
         if not self.disponivel:
@@ -179,7 +193,16 @@ class ClienteGemini:
                 types.AutomaticFunctionCallingConfig(maximum_remote_calls=max_chamadas) if ferramentas else None
             ),
         )
-        modelos = list(dict.fromkeys([m for m in [self._modelo_ok, *CONFIG.gemini_modelos] if m]))
+        cadeia = tuple(modelos or CONFIG.gemini_modelos)
+        nivel_pensamento = pensamento or CONFIG.gemini_pensamento
+        # O último modelo que respondeu vai na frente, mas só por um tempo: depois o preferido ganha nova chance.
+        fixo, desde = self._fixos.get(cadeia, (None, 0.0))
+        if time.monotonic() - desde >= CONFIG.gemini_volta_s:
+            fixo = None
+        modelos = list(dict.fromkeys([m for m in [fixo, *cadeia] if m]))
+        # Pula quem está sem cota; se todos estiverem, tenta ao menos o último da cadeia.
+        agora_m = time.monotonic()
+        modelos = [m for m in modelos if self._esgotados.get(m, 0.0) <= agora_m] or modelos[-1:]
         inicio = time.perf_counter()
         for modelo in modelos:
             restante = prazo_s - (time.perf_counter() - inicio)
@@ -191,21 +214,46 @@ class ClienteGemini:
                 timeout=int(min(restante, CONFIG.gemini_timeout_ms / 1000) * 1000),
                 retry_options=types.HttpRetryOptions(attempts=1),
             )
+            # Só a família 3 aceita thinking_level; nos outros o modelo usa o próprio padrão.
+            nivel = nivel_pensamento
+            if nivel in ("medium", "high") and "lite" in modelo:
+                nivel = "low"  # Flash-Lite com raciocínio alto passa de 30 s e volta 504
+            config.thinking_config = (
+                types.ThinkingConfig(thinking_level=nivel)
+                if nivel and modelo.startswith("gemini-3")
+                else None
+            )
             t0 = time.perf_counter()
             try:
-                self._contar()
-                resp = self._client().models.generate_content(model=modelo, contents=conteudo, config=config)
+                # Com ferramentas o SDK faz várias idas e voltas, cada uma com o próprio timeout HTTP;
+                # o prazo da thread garante o limite total. Uma chamada abandonada termina sozinha ao fundo.
+                futuro = _EXECUTOR.submit(self._client().models.generate_content, model=modelo, contents=conteudo, config=config)
+                resp = futuro.result(timeout=restante)
+            except concurrent.futures.TimeoutError:
+                ms = int((time.perf_counter() - t0) * 1000)
+                self.ultimo_erro = f"{modelo}: prazo de {prazo_s:.0f} s esgotado"
+                self.registrar(etapa, f"prazo de {prazo_s:.0f} s esgotado em {modelo}: usando regras", tempo_ms=ms, modelo=modelo, ok=False)
+                return None
             except Exception as e:  # noqa: BLE001 - qualquer falha vira fallback, registrada na trilha
                 ms = int((time.perf_counter() - t0) * 1000)
                 codigo = getattr(e, "code", None)
                 self.ultimo_erro = f"{modelo}: {codigo or type(e).__name__} {str(e)[:160]}"
                 self.registrar(etapa, f"falhou em {modelo} ({codigo or type(e).__name__})", tempo_ms=ms, modelo=modelo, ok=False)
+                if codigo == 429:
+                    # Cota diária esgotada: fora por 1 h. Limite por minuto: fora por 1 min.
+                    por_dia = "perday" in str(e).lower().replace(" ", "")
+                    self._esgotados[modelo] = time.monotonic() + (3600 if por_dia else 60)
+                elif codigo == 404:
+                    self._esgotados[modelo] = time.monotonic() + 3600
                 if codigo in (401, 403):
                     return None  # chave inválida: nenhum modelo vai funcionar
                 if codigo == 400 and "API key" in str(e):
                     return None
                 continue  # 404 (modelo inexistente), 429 (cota), 5xx, timeout → próximo modelo
             ms = int((time.perf_counter() - t0) * 1000)
+            # Só chamada que respondeu conta no teto diário (429 e 404 não gastam a chave).
+            self._contar()
+            self._esgotados.pop(modelo, None)
             texto = resp.text or ""
             objeto = None
             if schema is not None:
@@ -221,12 +269,21 @@ class ClienteGemini:
             tokens = (uso.total_token_count or 0) if uso else 0
             chamadas = self._registrar_ferramentas(resp)
             self._modelo_ok = modelo
+            if self._fixos.get(cadeia, (None,))[0] != modelo:
+                self._fixos[cadeia] = (modelo, time.monotonic())
             self.ultimo_erro = None
             self.registrar(etapa, detalhe or nome_schema, tokens=tokens, tempo_ms=ms, modelo=modelo)
             if chave:
                 bruto = TypeAdapter(schema).dump_python(objeto, mode="json")
                 self.armazem.kv_set(chave, {"objeto": bruto, "texto": texto, "modelo": modelo})
-            return RespostaIA(texto=texto, objeto=objeto, modelo=modelo, tokens=tokens, tempo_ms=ms, chamadas=chamadas)
+            resultados = [
+                parte.function_response.response
+                for c in (getattr(resp, "automatic_function_calling_history", None) or [])
+                for parte in (c.parts or [])
+                if getattr(parte, "function_response", None) is not None
+            ]
+            return RespostaIA(texto=texto, objeto=objeto, modelo=modelo, tokens=tokens, tempo_ms=ms, chamadas=chamadas,
+                              resultados=resultados)
         return None
 
     def _registrar_ferramentas(self, resp) -> list[dict]:

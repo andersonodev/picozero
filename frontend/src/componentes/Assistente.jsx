@@ -27,7 +27,9 @@ import '../assistente/assistente.css'
 const API = (import.meta.env.VITE_API_URL || globalThis.PICOZERO_API_URL || '').replace(/\/$/, '')
 const URL_LIBRECHAT = import.meta.env.VITE_LIBRECHAT_URL || ''
 const LIBRECHAT = /^https?:\/\//i.test(URL_LIBRECHAT) ? URL_LIBRECHAT : null
-const TEMPO_LIMITE_MS = 25000
+// O backend usa o Gemini Pro com raciocínio alto e confere os números (até 50 s com uma correção).
+// 75 s dá folga sobre os 50 s do backend; antes, com 60 s, a resposta às vezes chegava depois do corte.
+const TEMPO_LIMITE_MS = 75000
 const MAX_MENSAGENS = 20
 const MAX_TEXTO = 4000
 const LINHA_PX = 20
@@ -35,6 +37,10 @@ const MAX_LINHAS = 6
 const RESPIRO_CAMPO_PX = 12 // padding vertical do textarea (6 + 6)
 const ANO_LINKS = 2026
 const AVISO_LIMITE = 'Muitas perguntas seguidas; tente de novo em alguns segundos.'
+const AVISO_FALHA = {
+  tempo: 'O backend está conectado, mas o Gemini demorou demais para responder. Tente de novo.',
+  erro: 'O backend está conectado, mas falhou ao responder esta pergunta. Tente de novo.',
+}
 
 const SUGESTOES = [
   { texto: 'Qual é o pior dia do semestre?', Icone: TrendingUp },
@@ -64,27 +70,54 @@ function montarHistorico(lista) {
   return hist
 }
 
-// null = backend indisponível (rede, timeout, erro, HTML da SPA): quem chama usa a prévia local.
-async function perguntarApi(mensagens, unidade, sinal) {
+// O backend responde? (/api/saude em até 3 s). Distingue "desligado" de "ligado, mas falhou".
+async function backendNoAr() {
+  const ctrl = new AbortController()
+  const timer = setTimeout(() => ctrl.abort(), 3000)
   try {
-    const res = await fetch(`${API}/api/chat`, {
+    const res = await fetch(`${API}/api/saude`, { signal: ctrl.signal, headers: { Accept: 'application/json' } })
+    return res.ok && (res.headers.get('content-type') || '').includes('json')
+  } catch {
+    return false
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
+// null = backend desligado (rede fora, proxy sem backend, HTML da SPA): quem chama usa a prévia local.
+// { falha: 'tempo' | 'erro' } = backend no ar, mas esta pergunta não teve resposta: quem chama mostra aviso.
+async function perguntarApi(mensagens, unidade, sinal) {
+  let res
+  try {
+    res = await fetch(`${API}/api/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       body: JSON.stringify({ mensagens, unidade }),
       signal: sinal,
     })
+  } catch (e) {
+    if (e?.name === 'AbortError') return { falha: 'tempo' }
+    return (await backendNoAr()) ? { falha: 'erro' } : null
+  }
+  try {
     if (res.status === 429) return { limitado: true }
-    if (!res.ok || !(res.headers.get('content-type') || '').includes('json')) return null
+    const ehJson = (res.headers.get('content-type') || '').includes('json')
+    if (!res.ok || !ehJson) {
+      // Erro em JSON vem do próprio backend; texto ou HTML pode ser o proxy do Vite sem backend.
+      if (ehJson) return { falha: 'erro' }
+      return (await backendNoAr()) ? { falha: 'erro' } : null
+    }
     const dados = await res.json()
-    if (!dados || typeof dados.resposta !== 'string' || !dados.resposta.trim()) return null
+    if (!dados || typeof dados.resposta !== 'string' || !dados.resposta.trim()) return { falha: 'erro' }
     return {
       resposta: dados.resposta,
       ferramentas: Array.isArray(dados.ferramentas) ? dados.ferramentas.filter((f) => f && typeof f === 'object') : [],
       origem: dados.origem === 'gemini' ? 'gemini' : 'regras',
       modelo: typeof dados.modelo === 'string' ? dados.modelo : null,
+      conferida: dados.dados?.conferencia?.ok === true,
     }
   } catch {
-    return null
+    return { falha: 'erro' } // o backend respondeu, mas o corpo não era o esperado
   }
 }
 
@@ -364,10 +397,18 @@ const MensagemAssistente = memo(function MensagemAssistente({ m, aoClicarData })
         <div className="chat-texto">{renderizar(m.texto, aoClicarData)}</div>
         {m.ferramentas?.length > 0 && <Ferramentas itens={m.ferramentas} />}
         <div className="chat-meta">
-          <span className="chat-tag-ia">
-            <Bot size={13} strokeWidth={2} aria-hidden="true" />
-            Gerado por IA
-          </span>
+          {m.origem === 'gemini' && (
+            <span className="chat-tag-ia">
+              <Bot size={13} strokeWidth={2} aria-hidden="true" />
+              Gerado por IA
+            </span>
+          )}
+          {m.conferida && (
+            <span className="chat-tag-ia" title="Cada número, data e horário da resposta foi conferido com o que as ferramentas devolveram">
+              <Check size={13} strokeWidth={2} aria-hidden="true" />
+              Conferido com os dados
+            </span>
+          )}
           <span className="chat-origem" title={m.modelo || undefined}>
             <i className={`chat-ponto ${m.origem}`} aria-hidden="true" />
             <span className="chat-sr">Origem: </span>
@@ -503,10 +544,11 @@ export default function Assistente({ aberto, aoFechar, unidade = 'rj', irParaDia
     pedidoRef.current = null
     ocupadoRef.current = false
 
-    if (r?.limitado) {
+    if (r?.limitado || r?.falha) {
+      const aviso = r.limitado ? AVISO_LIMITE : AVISO_FALHA[r.falha] || AVISO_FALHA.erro
       setMensagens((atual) => [
         ...atual.map((m) => (m.id === pergunta.id ? { ...m, falhou: true } : m)),
-        { id: novoId(), papel: 'assistente', aviso: true, texto: AVISO_LIMITE, repetir: texto, perguntaId: pergunta.id },
+        { id: novoId(), papel: 'assistente', aviso: true, texto: aviso, repetir: texto, perguntaId: pergunta.id },
       ])
     } else {
       let resp = r
@@ -526,6 +568,7 @@ export default function Assistente({ aberto, aoFechar, unidade = 'rj', irParaDia
           ferramentas: resp.ferramentas || [],
           origem: resp.origem || 'previa',
           modelo: resp.modelo || null,
+          conferida: resp.conferida === true,
         },
       ])
     }

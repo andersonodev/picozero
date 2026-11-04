@@ -151,6 +151,61 @@ ASSISTENTE = AssistenteIngestao()
 # ---------- histórico consultável (ferramentas do Gemini e do MCP) ----------
 
 
+def periodos_academicos() -> list[dict]:
+    """Períodos do calendário (AP1, AP2, AS, rematrícula…) de todos os semestres, do mais antigo ao mais novo."""
+    marcos = [*contexto.historico_eventos().get("marcos", []), *contexto.calendario_atual()["marcos"]]
+    vistos = set()
+    saida = []
+    for m in sorted(marcos, key=lambda m: m["inicio"]):
+        chave = (m["inicio"], m["nome"])
+        if chave not in vistos:
+            vistos.add(chave)
+            saida.append({"nome": m["nome"], "inicio": m["inicio"], "fim": m["fim"], "tipo": m.get("tipo", "outro")})
+    return saida
+
+
+def picos_historicos(unidade: str, inicio: str, fim: str, quantos: int = 5) -> dict:
+    """Maiores picos registrados no histórico entre duas datas (inclusive), com os eventos de cada dia."""
+    try:
+        a, b = date.fromisoformat(inicio), date.fromisoformat(fim)
+    except ValueError:
+        return {"erro": f"datas inválidas: {inicio}, {fim}", "resumo": "datas inválidas"}
+    if b < a:
+        a, b = b, a
+    m = servico.motor()
+    por_dia: dict[str, tuple[float, str, str]] = {}
+    for ts, valor, origem in servico.armazem().serie(unidade, a.isoformat(), (b + timedelta(days=1)).isoformat()):
+        d = ts[:10]
+        if d not in por_dia or valor > por_dia[d][0]:
+            por_dia[d] = (valor, ts[11:16], origem)
+    dias = servico.armazem().dias_com_dados(unidade)
+    base = {"inicio": a.isoformat(), "fim": b.isoformat(), "historico_de": dias[0] if dias else None,
+            "historico_ate": dias[-1] if dias else None}
+    if not por_dia:
+        return {**base, "tem_dados": False, "resumo": f"sem histórico entre {a.isoformat()} e {b.isoformat()}"}
+    cap = contexto.unidade(unidade).capacidade
+    eventos = m.eventos_por_dia(unidade)
+
+    def item(d: str) -> dict:
+        valor, hora, _ = por_dia[d]
+        return {"data": d, "pico_real": round(valor), "hora": hora, "pct_capacidade": round(valor / cap * 100),
+                "eventos": [f"{e.hora_inicio} {e.descricao}" for e in eventos.get(d, [])]}
+
+    maiores = [item(d) for d in sorted(por_dia, key=lambda d: -por_dia[d][0])[: max(1, min(int(quantos), 20))]]
+    origens = sorted({o for _, _, o in por_dia.values()})
+    topo = maiores[0]
+    saida = {
+        **base, "tem_dados": True, "dias_com_dados": len(por_dia), "capacidade": cap,
+        # 'modelo' = histórico simulado pela semente; 'real'/'ingerido' = dados enviados pela ingestão.
+        "origem_dados": origens, "maiores": maiores,
+        "resumo": f"maior pico real entre {a.isoformat()} e {b.isoformat()}: {topo['pico_real']} em {topo['data']} "
+                  f"às {topo['hora']} (origem: {', '.join(origens)})",
+    }
+    if len(por_dia) <= 31:
+        saida["por_dia"] = [item(d) for d in sorted(por_dia)]
+    return saida
+
+
 def consultar_historico(unidade: str, data: str) -> dict:
     """Pico observado num dia do histórico, com os eventos daquele dia."""
     try:

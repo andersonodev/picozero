@@ -87,7 +87,11 @@ Ficam em `backend/.env` (que não vai para o Git). Só a primeira importa no dia
 | Variável | Para que serve | Padrão |
 |---|---|---|
 | `GEMINI_API_KEY` | Chave do Gemini. Sem ela, a IA usa regras. | vazio |
-| `GEMINI_MODEL` | Lista de modelos separada por vírgula; se um falhar, tenta o próximo | `gemini-3-flash-preview,…` |
+| `GEMINI_MODEL` | Lista de modelos separada por vírgula; se um falhar, tenta o próximo | `gemini-3.8-flash,…` |
+| `GEMINI_MODEL_CHAT` | Cadeia de modelos só do chat, do mais capaz para o mais leve. O Pro exige chave com faturamento | `gemini-3.1-pro-preview,gemini-pro-latest,gemini-3.8-flash,…` |
+| `GEMINI_THINKING_CHAT` | Nível de raciocínio no chat | `high` |
+| `GEMINI_THINKING` | Nível de raciocínio dos modelos Gemini 3 (`low`, `medium`, `high`). `low` responde mais rápido | `low` |
+| `GEMINI_VOLTA_S` | Depois de cair para um modelo reserva, segundos até tentar de novo o primeiro da cadeia | `300` |
 | `GEMINI_TIMEOUT_MS` | Tempo máximo por chamada ao Gemini | `30000` |
 | `PICOZERO_IA_LIMITE_DIARIO` | Teto de chamadas ao Gemini por dia | `400` |
 | `PICOZERO_IA_POR_MINUTO` | Teto de chamadas por minuto por IP | `12` |
@@ -97,6 +101,8 @@ Ficam em `backend/.env` (que não vai para o Git). Só a primeira importa no dia
 | `PICOZERO_TOKEN` | Se definido, exige este token nas rotas de escrita (ingestão, reconhecer alerta) | vazio |
 | `ALERTA_WEBHOOK_URL` | Webhook (Slack, Google Chat, Teams) que recebe alertas sério e crítico | vazio |
 | `PICOZERO_INGESTAO_MAX_MB` | Tamanho máximo de arquivo na ingestão | `25` |
+
+O chat confere cada número, data e horário da resposta contra o que as ferramentas devolveram. Se algum valor não aparece nos dados, o modelo recebe uma correção; se errar de novo, a resposta sai pelas regras do motor. No painel, a resposta conferida mostra a etiqueta **Conferido com os dados**.
 
 ## Testes
 

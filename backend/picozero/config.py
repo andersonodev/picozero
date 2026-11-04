@@ -43,10 +43,25 @@ class Config:
     gemini_modelos: list[str] = field(
         default_factory=lambda: _lista(
             "GEMINI_MODEL",
-            "gemini-3-flash-preview,gemini-3.6-flash,gemini-3.5-flash,gemini-3.8-flash,gemini-3.1-flash-lite,gemini-flash-lite-latest",
+            "gemini-3.8-flash,gemini-3.6-flash,gemini-3.5-flash,gemini-3-flash-preview,gemini-3.1-flash-lite,gemini-flash-lite-latest",
+        )
+    )
+    # Chat: os modelos mais capazes primeiro (o Pro exige chave com faturamento; no plano gratuito cai na hora
+    # para o próximo). Os Flash ficam de reserva.
+    gemini_modelos_chat: list[str] = field(
+        default_factory=lambda: _lista(
+            "GEMINI_MODEL_CHAT",
+            "gemini-3.1-pro-preview,gemini-pro-latest,gemini-3.8-flash,gemini-3.6-flash,gemini-3.5-flash,"
+            "gemini-3-flash-preview,gemini-3.1-flash-lite",
         )
     )
     gemini_timeout_ms: int = field(default_factory=lambda: _int("GEMINI_TIMEOUT_MS", 30000))
+    # Raciocínio dos modelos Gemini 3 (low, medium, high). "low" responde bem mais rápido; vazio = padrão do modelo.
+    gemini_pensamento: str | None = field(default_factory=lambda: os.getenv("GEMINI_THINKING", "low") or None)
+    # No chat a prioridade é acertar os números: raciocínio alto.
+    gemini_pensamento_chat: str | None = field(default_factory=lambda: os.getenv("GEMINI_THINKING_CHAT", "high") or None)
+    # Depois de cair para um modelo reserva, volta a tentar o primeiro da cadeia após este tempo.
+    gemini_volta_s: int = field(default_factory=lambda: _int("GEMINI_VOLTA_S", 300))
     # Teto diário de chamadas ao Gemini (protege a chave numa demo pública).
     ia_limite_diario: int = field(default_factory=lambda: _int("PICOZERO_IA_LIMITE_DIARIO", 400))
     ia_limite_por_minuto_ip: int = field(default_factory=lambda: _int("PICOZERO_IA_POR_MINUTO", 12))

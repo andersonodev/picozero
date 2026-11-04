@@ -3,9 +3,9 @@
 import asyncio
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import RedirectResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from mcp.server.transport_security import TransportSecuritySettings
 from starlette.routing import Route
 
@@ -83,6 +83,13 @@ app.include_router(rotas_ingestao.router)
 app.include_router(rotas_ingestao.escrita)
 app.include_router(rotas_sim)
 app.router.routes.append(Route("/mcp", endpoint=_MCPSobDemanda()))
+
+
+@app.exception_handler(Exception)
+async def _erro_interno(_request: Request, erro: Exception) -> JSONResponse:
+    # Erro inesperado sai em JSON, não em texto puro: assim o painel sabe que o backend está de pé
+    # (e mostra "tente de novo") em vez de achar que ele está desligado e cair na prévia local.
+    return JSONResponse(status_code=500, content={"detail": f"Erro interno no backend ({type(erro).__name__})."})
 
 
 @app.get("/", include_in_schema=False)
