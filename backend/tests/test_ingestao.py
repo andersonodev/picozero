@@ -280,7 +280,7 @@ def test_imagem_sem_gemini_avisa():
     res = analisar_arquivo(png, "foto.png")
     assert res.formato == "imagem"
     assert not res.eventos
-    assert any("GEMINI_API_KEY" in a for a in res.avisos)
+    assert any("VERTEX_API_KEY" in a for a in res.avisos)
 
 
 @pytest.mark.skipif(not PDF_REAL.exists(), reason="PDF de referência fora do repositório")

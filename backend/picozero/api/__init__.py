@@ -12,7 +12,7 @@ from starlette.routing import Route
 from .. import servico
 from ..config import CONFIG
 from ..mcp_servidor import mcp
-from . import rotas_alertas, rotas_ia, rotas_ingestao, rotas_painel, rotas_plano, rotas_simulacao
+from . import rotas_alertas, rotas_ia, rotas_ingestao, rotas_openai, rotas_painel, rotas_plano, rotas_simulacao
 from ..sim import router as rotas_sim
 
 # MCP sem estado e com respostas JSON: funciona atrás de load balancer e em serverless.
@@ -77,7 +77,7 @@ app.add_middleware(
     allow_headers=["*"],
     expose_headers=["Mcp-Session-Id"],
 )
-for r in (rotas_painel, rotas_alertas, rotas_ia, rotas_plano, rotas_simulacao):
+for r in (rotas_painel, rotas_alertas, rotas_ia, rotas_plano, rotas_simulacao, rotas_openai):
     app.include_router(r.router)
 app.include_router(rotas_ingestao.router)
 app.include_router(rotas_ingestao.escrita)

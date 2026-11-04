@@ -30,6 +30,21 @@ const LIBRECHAT = /^https?:\/\//i.test(URL_LIBRECHAT) ? URL_LIBRECHAT : null
 // O backend usa o Gemini Pro com raciocínio alto e confere os números (até 50 s com uma correção).
 // 75 s dá folga sobre os 50 s do backend; antes, com 60 s, a resposta às vezes chegava depois do corte.
 const TEMPO_LIMITE_MS = 75000
+// Raciocínio do Gemini no chat: quanto mais profundo, mais lento. A escolha fica salva no navegador.
+const RACIOCINIOS = [
+  { valor: 'low', rotulo: 'Rápido' },
+  { valor: 'medium', rotulo: 'Equilibrado' },
+  { valor: 'high', rotulo: 'Profundo' },
+]
+const CHAVE_RACIOCINIO = 'picozero.raciocinio'
+function lerRaciocinio() {
+  try {
+    const v = localStorage.getItem(CHAVE_RACIOCINIO)
+    return RACIOCINIOS.some((r) => r.valor === v) ? v : 'low'
+  } catch {
+    return 'low'
+  }
+}
 const MAX_MENSAGENS = 20
 const MAX_TEXTO = 4000
 const LINHA_PX = 20
@@ -86,13 +101,13 @@ async function backendNoAr() {
 
 // null = backend desligado (rede fora, proxy sem backend, HTML da SPA): quem chama usa a prévia local.
 // { falha: 'tempo' | 'erro' } = backend no ar, mas esta pergunta não teve resposta: quem chama mostra aviso.
-async function perguntarApi(mensagens, unidade, sinal) {
+async function perguntarApi(mensagens, unidade, sinal, raciocinio) {
   let res
   try {
     res = await fetch(`${API}/api/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-      body: JSON.stringify({ mensagens, unidade }),
+      body: JSON.stringify({ mensagens, unidade, raciocinio }),
       signal: sinal,
     })
   } catch (e) {
@@ -460,6 +475,8 @@ export default function Assistente({ aberto, aoFechar, unidade = 'rj', irParaDia
   const [mensagens, setMensagens] = useState([])
   const [rascunho, setRascunho] = useState('')
   const [carregando, setCarregando] = useState(false)
+  const [raciocinio, setRaciocinio] = useState(lerRaciocinio)
+  const idRaciocinio = useId()
   const painelRef = useRef(null)
   const rolagemRef = useRef(null)
   const campoRef = useRef(null)
@@ -538,7 +555,7 @@ export default function Assistente({ aberto, aoFechar, unidade = 'rj', irParaDia
     const ctrl = new AbortController()
     pedidoRef.current = ctrl
     const prazo = setTimeout(() => ctrl.abort(), TEMPO_LIMITE_MS)
-    const r = await perguntarApi(montarHistorico(lista), unidade || 'rj', ctrl.signal)
+    const r = await perguntarApi(montarHistorico(lista), unidade || 'rj', ctrl.signal, raciocinio)
     clearTimeout(prazo)
     if (geracao !== geracaoRef.current) return // conversa reiniciada ou painel desmontado
     pedidoRef.current = null
@@ -706,6 +723,28 @@ export default function Assistente({ aberto, aoFechar, unidade = 'rj', irParaDia
           >
             <ArrowUp size={17} strokeWidth={2.2} aria-hidden="true" />
           </button>
+        </div>
+        <div className="chat-opcoes">
+          <label htmlFor={idRaciocinio}>Raciocínio</label>
+          <select
+            id={idRaciocinio}
+            value={raciocinio}
+            title="Quanto o Gemini pensa antes de responder. Profundo é mais lento."
+            onChange={(e) => {
+              setRaciocinio(e.target.value)
+              try {
+                localStorage.setItem(CHAVE_RACIOCINIO, e.target.value)
+              } catch {
+                /* sem armazenamento local: vale só nesta aba */
+              }
+            }}
+          >
+            {RACIOCINIOS.map((r) => (
+              <option key={r.valor} value={r.valor}>
+                {r.rotulo}
+              </option>
+            ))}
+          </select>
         </div>
         <p className="chat-nota">
           O assistente usa IA (Gemini) e pode errar. Os números vêm do motor de carga do PicoZero; confira antes de agir.

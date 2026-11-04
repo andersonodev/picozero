@@ -318,6 +318,8 @@ class PedidoChat(BaseModel):
     mensagens: list[MensagemChat] = Field(min_length=1, max_length=30)
     unidade: str = "rj"
     agora: str | None = None
+    # Raciocínio do Gemini escolhido no painel (low = mais rápido); vazio = GEMINI_THINKING_CHAT.
+    raciocinio: Literal["low", "medium", "high"] | None = None
 
 
 class RespostaChat(BaseModel):

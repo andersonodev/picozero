@@ -555,6 +555,10 @@ h1, h2, h3, h4 { color: var(--texto); }
 .nota-rodape svg { color: var(--mudo); flex: none; }
 
 /* ---------- Responsivo ---------- */
+/* Nada empurra a página para o lado no celular (clip não quebra o sticky da barra). */
+html, body { overflow-x: clip; }
+/* Tabela larga rola dentro do próprio cartão. */
+.card-corpo:has(> .tabela) { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 @media (max-width: 1180px) {
   .cal-layout { grid-template-columns: 1fr; }
   .cal-painel { position: static; }

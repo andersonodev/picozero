@@ -1,0 +1,6 @@
+# O build só precisa de requirements.txt e backend/picozero. Nunca mandar segredos nem o front.
+deploy/picozero.env
+frontend
+**/__pycache__
+**/*.db*
+**/.env

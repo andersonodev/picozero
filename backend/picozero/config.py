@@ -38,32 +38,31 @@ def _db_padrao() -> str:
 
 @dataclass(frozen=True)
 class Config:
-    gemini_api_key: str | None = field(default_factory=lambda: os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY"))
+    # Chave de API do Vertex AI (Agent Platform). GEMINI_API_KEY/GOOGLE_API_KEY (AI Studio) não são mais lidas.
+    vertex_api_key: str | None = field(default_factory=lambda: os.getenv("VERTEX_API_KEY") or None)
     # Cadeia de modelos: tenta o primeiro; se não existir ou estiver sem cota, cai para o próximo.
     gemini_modelos: list[str] = field(
         default_factory=lambda: _lista(
             "GEMINI_MODEL",
-            "gemini-3.8-flash,gemini-3.6-flash,gemini-3.5-flash,gemini-3-flash-preview,gemini-3.1-flash-lite,gemini-flash-lite-latest",
+            "gemini-3.8-flash,gemini-3.1-pro-preview,gemini-3.6-flash,gemini-3.1-flash-lite",
         )
     )
-    # Chat: os modelos mais capazes primeiro (o Pro exige chave com faturamento; no plano gratuito cai na hora
-    # para o próximo). Os Flash ficam de reserva.
+    # Chat: o Pro primeiro (o mais inteligente para dados); os Flash novos ficam de reserva. Nomes válidos no Vertex.
     gemini_modelos_chat: list[str] = field(
         default_factory=lambda: _lista(
             "GEMINI_MODEL_CHAT",
-            "gemini-3.1-pro-preview,gemini-pro-latest,gemini-3.8-flash,gemini-3.6-flash,gemini-3.5-flash,"
-            "gemini-3-flash-preview,gemini-3.1-flash-lite",
+            "gemini-3.1-pro-preview,gemini-3.8-flash,gemini-3.6-flash",
         )
     )
     gemini_timeout_ms: int = field(default_factory=lambda: _int("GEMINI_TIMEOUT_MS", 30000))
     # Raciocínio dos modelos Gemini 3 (low, medium, high). "low" responde bem mais rápido; vazio = padrão do modelo.
     gemini_pensamento: str | None = field(default_factory=lambda: os.getenv("GEMINI_THINKING", "low") or None)
-    # No chat a prioridade é acertar os números: raciocínio alto.
-    gemini_pensamento_chat: str | None = field(default_factory=lambda: os.getenv("GEMINI_THINKING_CHAT", "high") or None)
+    # Chat: raciocínio baixo por padrão (o Pro responde mais rápido); o painel deixa escolher low, medium ou high.
+    gemini_pensamento_chat: str | None = field(default_factory=lambda: os.getenv("GEMINI_THINKING_CHAT", "low") or None)
     # Depois de cair para um modelo reserva, volta a tentar o primeiro da cadeia após este tempo.
     gemini_volta_s: int = field(default_factory=lambda: _int("GEMINI_VOLTA_S", 300))
-    # Teto diário de chamadas ao Gemini (protege a chave numa demo pública).
-    ia_limite_diario: int = field(default_factory=lambda: _int("PICOZERO_IA_LIMITE_DIARIO", 400))
+    # Teto diário de chamadas ao Gemini; 0 = sem teto (a chave do Vertex é paga). O limite por minuto segue valendo.
+    ia_limite_diario: int = field(default_factory=lambda: _int("PICOZERO_IA_LIMITE_DIARIO", 0))
     ia_limite_por_minuto_ip: int = field(default_factory=lambda: _int("PICOZERO_IA_POR_MINUTO", 12))
     db_path: str = field(default_factory=lambda: os.getenv("PICOZERO_DB") or _db_padrao())
     cors_origens: list[str] = field(default_factory=lambda: _lista("PICOZERO_CORS", "*"))

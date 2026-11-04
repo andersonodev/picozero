@@ -1,5 +1,7 @@
 # backend/tests/test_api.py
 # Fumaça da API inteira (o mesmo app que roda na Vercel) e do MCP por HTTP, sem rede e sem Gemini.
+import json
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -65,6 +67,23 @@ def test_ingestao_e_chat(cliente):
     assert r.status_code == 200 and r.json()["pontos_inseridos"] == 2
     r = cliente.post("/api/chat", json={"mensagens": [{"papel": "usuario", "texto": "alertas?"}], "unidade": "rj"})
     assert r.status_code == 200 and r.json()["origem"] == "regras"
+
+
+def test_api_openai_sobre_o_copiloto(cliente):
+    assert cliente.get("/v1/models").json()["data"][0]["id"] == "picozero-assistente"
+    msgs = [
+        {"role": "system", "content": "ignorada"},
+        {"role": "user", "content": [{"type": "text", "text": "alertas?"}]},
+    ]
+    r = cliente.post("/v1/chat/completions", json={"model": "picozero-assistente", "messages": msgs})
+    corpo = r.json()
+    assert r.status_code == 200 and corpo["choices"][0]["message"]["role"] == "assistant"
+    assert corpo["choices"][0]["message"]["content"] and corpo["choices"][0]["finish_reason"] == "stop"
+    r = cliente.post("/v1/chat/completions", json={"messages": msgs, "stream": True})
+    linhas = [x for x in r.text.splitlines() if x.startswith("data: ")]
+    assert r.status_code == 200 and linhas[-1] == "data: [DONE]" and '"finish_reason": "stop"' in linhas[-2]
+    assert json.loads(linhas[1][6:])["choices"][0]["delta"]["content"]
+    assert cliente.post("/v1/chat/completions", json={"messages": [{"role": "system", "content": "x"}]}).status_code == 400
 
 
 def test_mcp_por_http(cliente):

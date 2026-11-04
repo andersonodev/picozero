@@ -75,9 +75,9 @@ Ferramentas:
 
 ## Configuração (`.env` local ou variáveis da Vercel)
 
-Veja `.env.example`. A única variável necessária para usar a IA é `GEMINI_API_KEY`. Sem ela, tudo responde por regras (`origem: "regras"`).
+Veja `.env.example`. A única variável necessária para usar a IA é `VERTEX_API_KEY`. Sem ela, tudo responde por regras (`origem: "regras"`).
 
-A cadeia de modelos (`GEMINI_MODEL`) troca de modelo na hora quando recebe 404, 429 ou 503. Cada chamada tem prazo total de 45 s. As respostas estruturadas ficam em cache e o teto diário é `PICOZERO_IA_LIMITE_DIARIO`.
+A cadeia de modelos (`GEMINI_MODEL`) troca de modelo na hora quando recebe 404, 429 ou 503. Cada chamada tem prazo total de 45 s. As respostas estruturadas ficam em cache e não há teto diário, a não ser que `PICOZERO_IA_LIMITE_DIARIO` seja definido.
 
 ## White label
 

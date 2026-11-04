@@ -140,7 +140,8 @@ export function responderLocal(texto, { agora = new Date(), unidade = 'rj' } = {
   else if (mes >= 0) r = diasCriticos({ proximos: false, mes, agora })
   else if (RE_CAPACIDADE.test(t)) r = capacidade()
   else if (RE_FONTE.test(t)) r = fonteDados()
-  else r = ajuda(RE_SAUDACAO.test(t))
+  else if (RE_SAUDACAO.test(t)) r = ajuda(true)
+  else r = semResposta(agora)
   // Só o RJ está modelado na prévia: em outra unidade, diz de onde vêm os números.
   const sigla = String(unidade || 'rj').toUpperCase()
   const nota = sigla !== 'RJ'
@@ -382,6 +383,23 @@ function fonteDados() {
     ferramentas: [
       ferramenta('previa.contexto', `${plural(EVENTOS.length, 'evento', 'eventos')} · ${plural(CONTEXTO.feriados.length, 'feriado', 'feriados')} · ${plural(MARCOS.length, 'período', 'períodos')}`),
     ],
+  }
+}
+
+// Pergunta fora do roteiro: nunca volta sem dados. Mostra os dias críticos do semestre e o que dá para perguntar.
+function semResposta(agora) {
+  const base = diasCriticos({ proximos: false, mes: -1, agora })
+  const sugestoes = ajuda(false).resposta.split('\n').slice(1)
+  return {
+    resposta: [
+      'Não achei uma resposta exata para isso na prévia local (sem backend). Estes são os dias críticos do semestre:',
+      '',
+      base.resposta,
+      '',
+      'Também posso dizer:',
+      ...sugestoes,
+    ].join('\n'),
+    ferramentas: base.ferramentas,
   }
 }
 

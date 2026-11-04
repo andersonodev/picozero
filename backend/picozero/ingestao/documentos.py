@@ -87,7 +87,7 @@ def analisar_pdf(conteudo: bytes, *, dica: str | None = None, ia: Any = None) ->
 
 def analisar_imagem(conteudo: bytes, mime: str, *, dica: str | None = None, ia: Any = None) -> ResultadoParse:
     if not ia_disponivel(ia):
-        return ResultadoParse(formato="imagem", avisos=["imagem precisa do Gemini (defina GEMINI_API_KEY)"])
+        return ResultadoParse(formato="imagem", avisos=["imagem precisa do Gemini (defina VERTEX_API_KEY)"])
     avisos: list[str] = []
     res = eventos_pela_ia(ia, conteudo, mime, dica, "imagem", avisos)
     return res or ResultadoParse(formato="imagem", avisos=[*avisos, "o Gemini não devolveu eventos da imagem"])

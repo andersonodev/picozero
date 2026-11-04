@@ -32,7 +32,7 @@ Se o backend não subir, o `rodar-windows.bat` para e diz o motivo: porta 8000 o
 
 - [uv](https://docs.astral.sh/uv/) (ele instala o Python 3.12 sozinho se faltar)
 - Node.js 20.19 ou mais novo, com npm
-- Opcional: uma chave do Gemini ([Google AI Studio](https://aistudio.google.com/apikey)). Sem ela, tudo funciona com regras no lugar da IA.
+- Opcional: uma chave de API do Vertex AI (Agent Platform), criada em [Credenciais do Google Cloud](https://console.cloud.google.com/apis/credentials). Sem ela, tudo funciona com regras no lugar da IA.
 
 ## Rodar localmente
 
@@ -42,7 +42,7 @@ Use dois terminais, um para cada parte.
 
 ```bash
 cd backend
-cp .env.example .env      # e coloque sua GEMINI_API_KEY (opcional)
+cp .env.example .env      # e coloque sua VERTEX_API_KEY (opcional)
 uv sync
 uv run fastapi dev        # http://127.0.0.1:8000
 ```
@@ -86,14 +86,14 @@ Ficam em `backend/.env` (que não vai para o Git). Só a primeira importa no dia
 
 | Variável | Para que serve | Padrão |
 |---|---|---|
-| `GEMINI_API_KEY` | Chave do Gemini. Sem ela, a IA usa regras. | vazio |
+| `VERTEX_API_KEY` | Chave de API do Vertex AI (Agent Platform). Sem ela, a IA usa regras. | vazio |
 | `GEMINI_MODEL` | Lista de modelos separada por vírgula; se um falhar, tenta o próximo | `gemini-3.8-flash,…` |
-| `GEMINI_MODEL_CHAT` | Cadeia de modelos só do chat, do mais capaz para o mais leve. O Pro exige chave com faturamento | `gemini-3.1-pro-preview,gemini-pro-latest,gemini-3.8-flash,…` |
-| `GEMINI_THINKING_CHAT` | Nível de raciocínio no chat | `high` |
+| `GEMINI_MODEL_CHAT` | Cadeia de modelos só do chat: o Pro primeiro, os Flash novos de reserva | `gemini-3.1-pro-preview,gemini-3.8-flash,gemini-3.6-flash` |
+| `GEMINI_THINKING_CHAT` | Raciocínio padrão do chat; no painel cada pessoa escolhe Rápido, Equilibrado ou Profundo | `low` |
 | `GEMINI_THINKING` | Nível de raciocínio dos modelos Gemini 3 (`low`, `medium`, `high`). `low` responde mais rápido | `low` |
 | `GEMINI_VOLTA_S` | Depois de cair para um modelo reserva, segundos até tentar de novo o primeiro da cadeia | `300` |
 | `GEMINI_TIMEOUT_MS` | Tempo máximo por chamada ao Gemini | `30000` |
-| `PICOZERO_IA_LIMITE_DIARIO` | Teto de chamadas ao Gemini por dia | `400` |
+| `PICOZERO_IA_LIMITE_DIARIO` | Teto de chamadas ao Gemini por dia (`0` = sem teto) | `0` |
 | `PICOZERO_IA_POR_MINUTO` | Teto de chamadas por minuto por IP | `12` |
 | `PICOZERO_AGORA` | Fixa o "agora" do motor para demonstração (`2026-09-10T17:00`) | relógio real |
 | `PICOZERO_DB` | Caminho do banco SQLite | `backend/picozero.db` |
@@ -152,7 +152,7 @@ vercel          # prévia
 vercel --prod   # produção
 ```
 
-Cadastre `GEMINI_API_KEY` nas variáveis de ambiente do projeto na Vercel. Lá o banco fica em `/tmp`, que é apagado de tempos em tempos; quando isso acontece, o backend recria o banco com os dados iniciais, e os dados enviados pela ingestão se perdem.
+Cadastre `VERTEX_API_KEY` nas variáveis de ambiente do projeto na Vercel. Lá o banco fica em `/tmp`, que é apagado de tempos em tempos; quando isso acontece, o backend recria o banco com os dados iniciais, e os dados enviados pela ingestão se perdem.
 
 ## Estrutura
 

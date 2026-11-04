@@ -47,7 +47,8 @@ export default function Fontes({ unidade }) {
         {ia && (
           <div className="cab-acoes">
             <span className={`pill ${ia.modo === 'gemini' || ia.configurado ? 'ok' : 'atencao'}`}>
-              IA: {ia.configurado ? `Gemini (${ia.modelo})` : 'modo regras'} · {ia.chamadas_hoje}/{ia.limite_diario} chamadas hoje
+              IA: {ia.configurado ? `Gemini (${ia.modelo})` : 'modo regras'}
+              {ia.limite_diario ? ` · ${ia.chamadas_hoje}/${ia.limite_diario} chamadas hoje` : ''}
             </span>
           </div>
         )}

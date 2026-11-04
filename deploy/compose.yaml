@@ -1,0 +1,95 @@
+# deploy/compose.yaml — PicoZero no servidor do ERP da IBMEC Jr. (Lightsail 56.125.204.35).
+#   http://56.125.204.35:8080  nginx do PicoZero direto (precisa da porta 8080 liberada no firewall do Lightsail)
+#   https://picozeroday.vercel.app/chat  LibreChat (nginx tira o prefixo /chat e repassa ao contêiner librechat)
+#   https://56.125.204.35      pelo Traefik do ERP, com o certificado padrão dele (o navegador avisa: não há
+#                              certificado válido para IP). A regra só casa com o Host do IP; o domínio do ERP não muda.
+# Em HTTP a porta 80 não serve: o Traefik 3 não deixa regra de usuário passar do redirecionamento HTTP→HTTPS do ERP.
+name: picozero
+
+services:
+  picozero-api:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    image: picozero-api:latest
+    env_file: picozero.env  # gerado pelo publicar.sh a partir do backend/.env; nunca vai para o Git
+    environment:
+      PICOZERO_DB: /data/picozero.db
+    volumes:
+      - dados:/data
+    mem_limit: 512m
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/saude', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    logging: &logs
+      driver: json-file
+      options: { max-size: 10m, max-file: "3" }
+    networks: [interna]
+
+  picozero-web:
+    image: nginx:stable-alpine
+    volumes:
+      - ../frontend/dist:/usr/share/nginx/html:ro
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      picozero-api:
+        condition: service_healthy
+    mem_limit: 64m
+    restart: unless-stopped
+    logging: *logs
+    ports:
+      - "8080:80"
+    # Só o nginx entra na rede do ERP, com nome que não colide com os serviços de lá (backend, frontend, db...).
+    networks: [interna, erp]
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=ibmecjr-erp_default
+      - traefik.http.services.picozero.loadbalancer.server.port=80
+      - traefik.http.routers.picozero-ip.rule=Host(`56.125.204.35`)
+      - traefik.http.routers.picozero-ip.entrypoints=websecure
+      - traefik.http.routers.picozero-ip.tls=true
+      - traefik.http.routers.picozero-ip.service=picozero
+
+  # LibreChat em /chat (pelo mesmo nginx), respondendo com o assistente do PicoZero (picozero-api:8000/v1).
+  # Nomes com prefixo próprio: na rede interna não há colisão, e nada daqui entra na rede do ERP.
+  librechat:
+    image: registry.librechat.ai/librechat-ai/librechat-dev:latest
+    env_file: librechat.env  # criado no servidor pelo publicar.sh (segredos gerados lá); nunca vai para o Git
+    environment:
+      HOST: 0.0.0.0
+      PORT: "3080"
+      MONGO_URI: mongodb://librechat-mongo:27017/LibreChat
+    volumes:
+      - librechat_uploads:/app/uploads
+      - ./librechat.yaml:/app/librechat.yaml:ro
+    depends_on:
+      - librechat-mongo
+    mem_limit: 768m
+    restart: unless-stopped
+    logging: *logs
+    networks: [interna]
+
+  librechat-mongo:
+    image: mongo:8.0.20
+    command: mongod --noauth --wiredTigerCacheSizeGB 0.25  # sem porta publicada: só o LibreChat alcança
+    volumes:
+      - librechat_mongo:/data/db
+    mem_limit: 384m
+    restart: unless-stopped
+    logging: *logs
+    networks: [interna]
+
+networks:
+  interna: {}
+  erp:
+    external: true
+    name: ibmecjr-erp_default
+
+volumes:
+  dados: {}
+  librechat_uploads: {}
+  librechat_mongo: {}

@@ -11,10 +11,11 @@ from google import genai  # noqa: E402
 
 from picozero.config import CONFIG  # noqa: E402
 
-if not CONFIG.gemini_api_key:
-    sys.exit("Sem GEMINI_API_KEY no backend/.env.")
+if not CONFIG.vertex_api_key:
+    sys.exit("Sem VERTEX_API_KEY no backend/.env.")
 
-cliente = genai.Client(api_key=CONFIG.gemini_api_key)
+# Vertex AI com chave de API (endpoint global), o mesmo caminho do backend.
+cliente = genai.Client(vertexai=True, api_key=CONFIG.vertex_api_key)
 candidatos = list(dict.fromkeys([*CONFIG.gemini_modelos_chat, *CONFIG.gemini_modelos]))
 ok: list[str] = []
 for modelo in candidatos:
@@ -30,7 +31,7 @@ for modelo in candidatos:
 
 print()
 if not ok:
-    print("Nenhum modelo respondeu. Veja a cota em https://aistudio.google.com (Dashboard > Usage).")
+    print("Nenhum modelo respondeu. Veja cotas e faturamento do Vertex AI no console do Google Cloud.")
 else:
     chat = [m for m in CONFIG.gemini_modelos_chat if m in ok] or ok
     geral = [m for m in CONFIG.gemini_modelos if m in ok] or ok

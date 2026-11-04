@@ -2,7 +2,8 @@
 # Cliente do Gemini com tudo o que uma demo pública precisa para não cair:
 # cadeia de modelos (404/429 → próximo), retry com backoff do próprio SDK, timeout, teto diário,
 # cache das respostas estruturadas e trilha de auditoria de cada chamada e de cada ferramenta.
-# Sem GEMINI_API_KEY (ou sem cota) `gerar` devolve None e quem chamou usa as regras determinísticas.
+# Vai ao Vertex AI (aiplatform.googleapis.com) com a chave de API VERTEX_API_KEY, sem project/location.
+# Sem chave (ou sem cota) `gerar` devolve None e quem chamou usa as regras determinísticas.
 import concurrent.futures
 import hashlib
 import json
@@ -76,14 +77,14 @@ class ClienteGemini:
 
     @property
     def configurado(self) -> bool:
-        return bool(CONFIG.gemini_api_key) and genai is not None
+        return bool(CONFIG.vertex_api_key) and genai is not None
 
     @property
     def disponivel(self) -> bool:
         dia, n = self._uso
         if dia != date.today():
             return self.configurado
-        return self.configurado and n < CONFIG.ia_limite_diario
+        return self.configurado and (not CONFIG.ia_limite_diario or n < CONFIG.ia_limite_diario)
 
     @property
     def modelo(self) -> str:
@@ -98,14 +99,16 @@ class ClienteGemini:
             "cadeia": CONFIG.gemini_modelos,
             "chamadas_hoje": n if dia == date.today() else 0,
             "pulando": sorted(m for m, ate in self._esgotados.items() if ate > time.monotonic()),
-            "limite_diario": CONFIG.ia_limite_diario,
+            "limite_diario": CONFIG.ia_limite_diario or None,
             "ultimo_erro": self.ultimo_erro,
         }
 
     def _client(self):
         if self._cliente is None:
+            # Com chave de API o SDK usa o endpoint global; project/location junto com a chave conflitam.
             self._cliente = genai.Client(
-                api_key=CONFIG.gemini_api_key,
+                vertexai=True,
+                api_key=CONFIG.vertex_api_key,
                 http_options=types.HttpOptions(
                     timeout=CONFIG.gemini_timeout_ms,
                     # Sem retry no SDK: um 503 troca de modelo na hora (em dia de demanda alta o 503 é por modelo).

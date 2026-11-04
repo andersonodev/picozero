@@ -52,13 +52,13 @@ uv sync
 if errorlevel 1 goto erro
 if exist ".env" goto env_pronto
 echo.
-echo Chave do Gemini: opcional. Sem ela a IA responde por regras.
-echo Pegue uma em https://aistudio.google.com/apikey
+echo Chave do Vertex AI: opcional. Sem ela a IA responde por regras.
+echo Crie em https://console.cloud.google.com/apis/credentials
 set "CHAVE="
-set /p "CHAVE=Cole a GEMINI_API_KEY e aperte Enter, ou so Enter para pular: "
+set /p "CHAVE=Cole a VERTEX_API_KEY e aperte Enter, ou so Enter para pular: "
 if not defined CHAVE goto env_sem_chave
-> ".env" echo GEMINI_API_KEY=%CHAVE%
-findstr /v /b "GEMINI_API_KEY=" ".env.example" >> ".env"
+> ".env" echo VERTEX_API_KEY=%CHAVE%
+findstr /v /b "VERTEX_API_KEY=" ".env.example" >> ".env"
 goto env_pronto
 :env_sem_chave
 copy /y ".env.example" ".env" >nul

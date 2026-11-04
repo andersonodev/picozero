@@ -153,7 +153,7 @@ def _responder_gemini(pedido: PedidoChat, unidade: str, agora: datetime) -> Resp
         r = ia.gerar("chat", conteudo, sistema=sistema, ferramentas=ferramentas, temperatura=0.2, usar_cache=False,
                      detalhe=f"copiloto · {len(pedido.mensagens)} mensagens" + (" · correção" if tentativa else ""),
                      max_chamadas=8, prazo_s=restante, modelos=CONFIG.gemini_modelos_chat,
-                     pensamento=CONFIG.gemini_pensamento_chat)
+                     pensamento=pedido.raciocinio or CONFIG.gemini_pensamento_chat)
         if r is None or not r.texto.strip():
             return None
         resultados += r.resultados
