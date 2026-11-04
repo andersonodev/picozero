@@ -1,0 +1,18 @@
+# dependências
+node_modules/
+frontend/node_modules/
+# build
+dist/
+frontend/dist/
+.vercel/
+# ambiente / segredos
+.env
+.env.*
+!.env.example
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/
+# sistema
+.DS_Store
