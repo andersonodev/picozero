@@ -26,6 +26,8 @@ Isso baixa o projeto, instala o que faltar e abre o painel no navegador. Se voc�
 
 Para parar, feche as duas janelas "PicoZero backend" e "PicoZero painel". Se o Windows mostrar "O Windows protegeu o computador", clique em **Mais informações › Executar assim mesmo**.
 
+Se o backend não subir, o `rodar-windows.bat` para e diz o motivo: porta 8000 ocupada, erro ao carregar o backend, ou a janela "PicoZero backend" com a mensagem de erro. Se a pasta veio de outro computador, ele reinstala as dependências para o Windows sozinho.
+
 ## Pré-requisitos
 
 - [uv](https://docs.astral.sh/uv/) (ele instala o Python 3.12 sozinho se faltar)

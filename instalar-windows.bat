@@ -23,6 +23,8 @@ echo.
 echo Nao consegui instalar o uv. Instale por https://docs.astral.sh/uv/ e rode este arquivo de novo.
 goto erro
 :uv_pronto
+rem Um uv antigo nao le o uv.lock deste projeto; atualiza quando foi instalado pelo instalador oficial.
+uv self update >nul 2>nul
 echo [1/4] uv pronto.
 
 rem ---------- 2/4 Node.js 20.19+ ou 22.12+: roda o frontend
@@ -44,6 +46,8 @@ echo [2/4] Node.js pronto.
 rem ---------- 3/4 backend
 echo [3/4] Instalando o backend: Python 3.12 e dependencias...
 cd /d "%~dp0backend"
+rem Um .venv que veio de outro computador (Mac/Linux) nao serve no Windows: apaga e recria.
+if exist ".venv" if not exist ".venv\Scripts\python.exe" rmdir /s /q ".venv"
 uv sync
 if errorlevel 1 goto erro
 if exist ".env" goto env_pronto
@@ -66,6 +70,8 @@ echo [4/4] Instalando o frontend...
 cd /d "%~dp0frontend"
 call npm ci
 if errorlevel 1 goto erro
+rem Marca que o node_modules foi instalado neste Windows (o rodar-windows.bat confere).
+type nul > "node_modules\.instalado-windows"
 echo [4/4] Frontend pronto.
 
 echo.
