@@ -58,7 +58,10 @@ services:
   # LibreChat em /chat (pelo mesmo nginx), respondendo com o assistente do PicoZero (picozero-api:8000/v1).
   # Nomes com prefixo próprio: na rede interna não há colisão, e nada daqui entra na rede do ERP.
   librechat:
-    image: registry.librechat.ai/librechat-ai/librechat-dev:latest
+    # Imagem oficial + logo e ícones do PicoZero (deploy/librechat/Dockerfile).
+    build:
+      context: ./librechat
+    image: picozero-librechat:latest
     env_file: librechat.env  # criado no servidor pelo publicar.sh (segredos gerados lá); nunca vai para o Git
     environment:
       HOST: 0.0.0.0

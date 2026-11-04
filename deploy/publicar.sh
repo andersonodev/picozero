@@ -10,7 +10,7 @@ SERVIDOR="${PICOZERO_SERVIDOR:-ubuntu@56.125.204.35}"
 CHAVE="${PICOZERO_SSH_KEY:-$HOME/my_folders/producao/orgs/ibmecjrsolucoes/erpnext/LightsailDefaultKey-sa-east-1 (2).pem}"
 DESTINO=/home/ubuntu/picozero
 # O painel mostra o botão "Abrir no LibreChat" quando esta variável existe no build.
-export VITE_LIBRECHAT_URL="${VITE_LIBRECHAT_URL:-https://picozeroday.vercel.app/chat}"
+export VITE_LIBRECHAT_URL="${VITE_LIBRECHAT_URL:-https://picozeroday.vercel.app/chat/}"
 ssh_srv() { ssh -i "$CHAVE" -o BatchMode=yes -o ConnectTimeout=15 "$SERVIDOR" "$@"; }
 
 echo "1/5 build do painel (botão do LibreChat: $VITE_LIBRECHAT_URL)"
@@ -20,7 +20,7 @@ echo "1/5 build do painel (botão do LibreChat: $VITE_LIBRECHAT_URL)"
 echo "2/5 envio do código"
 COPYFILE_DISABLE=1 tar --no-mac-metadata --no-xattrs --exclude='__pycache__' -czf - \
   requirements.txt backend/picozero frontend/dist \
-  deploy/compose.yaml deploy/Dockerfile deploy/Dockerfile.dockerignore deploy/nginx.conf deploy/librechat/librechat.yaml \
+  deploy/compose.yaml deploy/Dockerfile deploy/Dockerfile.dockerignore deploy/nginx.conf deploy/librechat/librechat.yaml deploy/librechat/Dockerfile deploy/librechat/marca \
   | ssh_srv "mkdir -p $DESTINO && cd $DESTINO && rm -rf backend/picozero frontend/dist && tar --warning=no-unknown-keyword -xzf - && cp deploy/librechat/librechat.yaml deploy/librechat.yaml"
 
 echo "3/5 envio das credenciais (backend/.env -> $DESTINO/deploy/picozero.env, modo 600)"
