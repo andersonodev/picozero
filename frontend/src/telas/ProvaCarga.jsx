@@ -2,6 +2,7 @@
 // Prova de carga: latência antes × depois × controle (saída de carga/comparar.py)
 // e o que o aluno vê com a fila virtual. Sem ilustração: mock de produto em CSS.
 import { CartesianGrid, Line, LineChart, ReferenceDot, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { CircleCheck, Info, ShieldCheck, TriangleAlert } from 'lucide-react'
 import { CONTEXTO, resumoLatencia, seriesLatencia } from '../dados/previa'
 import { useTema } from '../tema'
 import { numero } from '../util'
@@ -27,103 +28,125 @@ export default function ProvaCarga() {
   const t = useTema()
   const series = seriesLatencia()
   const resumo = resumoLatencia()
-  const cores = { antes: t.serie2, depois: t.serie1, controle: t.serie3 }
+  const cores = { antes: t.semPlano, depois: t.comPlano, controle: t.controle }
   const [antes, depois] = resumo
   const picoAntes = series.reduce((a, b) => (b.antes > a.antes ? b : a))
 
   return (
     <>
-      <div className="secao" style={{ marginBottom: 16 }}>
-        <div className="eyebrow">Prova · teste de carga com Locust</div>
-        <h1 className="h-page">
-          Com o plano, o p95 cai de <span className="destaque">{numero(antes.p95)} ms</span> para {numero(depois.p95)} ms.
-        </h1>
-        <p className="lide">
-          O Locust reproduz a curva do dia calculada pelo código (histórico + cálculo), nunca a saída do Gemini — assim a
-          prova não é circular. Mesmo servidor simulado, três perfis de carga.
-        </p>
-      </div>
+      <header className="cab-pagina">
+        <div>
+          <h1>Prova de carga</h1>
+          <p className="sub">
+            O Locust reproduz a curva de 10/09 calculada pelo código (histórico + cálculo), nunca a saída do Gemini: a prova não é circular.
+          </p>
+        </div>
+      </header>
 
-      <div className="grade-3 secao">
+      <section className="card aviso ok secao">
+        <div className="aviso-icone"><CircleCheck size={20} strokeWidth={2} aria-hidden="true" /></div>
+        <div className="aviso-corpo">
+          <h3>Com o plano, o p95 cai de {numero(antes.p95)} ms para {numero(depois.p95)} ms</h3>
+          <p>
+            E os erros 503 vão de {pct(antes.erros)} para {pct(depois.erros)}. Mesmo servidor simulado, três perfis de carga.
+          </p>
+        </div>
+      </section>
+
+      <div className="grade g-3 secao">
         {resumo.map((c) => (
-          <div key={c.chave} className={`card tile ${c.erros > 0 ? 'ruim' : ''}`} style={{ minHeight: 0 }}>
-            <span className="k" style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}>
-              <i style={{ width: 12, height: 3, borderRadius: 2, background: cores[c.chave], display: 'inline-block' }} />
-              {c.nome}
-            </span>
-            <span className="d" style={{ marginBottom: 10 }}>{c.sub}</span>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8 }}>
-              <div><div className="k">p50</div><div className="num" style={{ fontSize: 22 }}>{numero(c.p50)}<small style={{ fontSize: 11, color: 'var(--mudo)' }}> ms</small></div></div>
-              <div><div className="k">p95</div><div className="num" style={{ fontSize: 22 }}>{numero(c.p95)}<small style={{ fontSize: 11, color: 'var(--mudo)' }}> ms</small></div></div>
-              <div><div className="k">503</div><div className="num" style={{ fontSize: 22, color: c.erros > 0 ? 'var(--critico)' : 'inherit' }}>{pct(c.erros)}</div></div>
+          <div key={c.chave} className="card metrica">
+            <span className="perfil-cab"><i style={{ background: cores[c.chave] }} />{c.nome}</span>
+            <span className="perfil-sub">{c.sub}</span>
+            <div className="perfil-nums">
+              <div>
+                <div className="rot">p50</div>
+                <div className="v">{numero(c.p50)}<small>ms</small></div>
+              </div>
+              <div>
+                <div className="rot">p95</div>
+                <div className="v">{numero(c.p95)}<small>ms</small></div>
+              </div>
+              <div>
+                <div className="rot">Erros 503</div>
+                <div className={`v ${c.erros > 0 ? 'critico' : ''}`}>{pct(c.erros)}</div>
+              </div>
             </div>
           </div>
         ))}
       </div>
 
-      <div className="card secao">
+      <section className="card secao">
         <div className="card-cab">
           <div>
-            <h3>Latência p95 ao longo do dia simulado</h3>
-            <div className="meta">/sim/login · /sim/prova · base × (1 + (ativos ÷ {CONTEXTO.capacidade})³) · 503 acima de 1,5× a capacidade</div>
+            <h2>Latência p95 ao longo do dia simulado</h2>
+            <p>/sim/login e /sim/prova · base × (1 + (ativos ÷ {CONTEXTO.capacidade})³) · 503 acima de 1,5× a capacidade</p>
           </div>
           <div className="legenda">
-            {resumo.map((c) => (<span key={c.chave}><i className="linha" style={{ background: cores[c.chave] }} />{c.nome}</span>))}
+            {resumo.map((c) => (
+              <span key={c.chave}><i style={{ background: cores[c.chave], height: 3, width: 14 }} />{c.nome}</span>
+            ))}
           </div>
         </div>
         <div className="card-corpo">
           <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={series} margin={{ top: 28, right: 28, bottom: 0, left: 0 }}>
+            <LineChart data={series} margin={{ top: 26, right: 16, bottom: 0, left: 0 }}>
               <CartesianGrid vertical={false} stroke={t.grade} />
               <XAxis dataKey="hora" interval={11} tick={{ fill: t.mudo, fontSize: 12 }} tickLine={false} axisLine={{ stroke: t.grade }} />
-              <YAxis tick={{ fill: t.mudo, fontSize: 12 }} tickLine={false} axisLine={false} width={66} tickFormatter={(v) => `${numero(v)} ms`} />
+              <YAxis tick={{ fill: t.mudo, fontSize: 12 }} tickLine={false} axisLine={false} width={70} tickFormatter={(v) => `${numero(v)} ms`} />
               <Tooltip content={<Dica />} cursor={{ stroke: t.mudo, strokeDasharray: '3 3' }} />
               {resumo.map((c) => (
-                <Line key={c.chave} type="monotone" dataKey={c.chave} name={c.nome} stroke={cores[c.chave]} strokeWidth={2} dot={false} activeDot={{ r: 4, stroke: t.superficie, strokeWidth: 2 }} isAnimationActive={false} />
+                <Line key={c.chave} type="monotone" dataKey={c.chave} name={c.nome} stroke={cores[c.chave]} strokeWidth={c.chave === 'depois' ? 2.5 : 2} dot={false} activeDot={{ r: 4, stroke: t.superficie, strokeWidth: 2 }} isAnimationActive={false} />
               ))}
-              <ReferenceDot x={picoAntes.hora} y={picoAntes.antes} r={5} fill={cores.antes} stroke={t.superficie} strokeWidth={2} label={{ value: `pico sem plano ${numero(picoAntes.antes)} ms`, position: 'top', fill: t.texto, fontSize: 12 }} />
+              <ReferenceDot x={picoAntes.hora} y={picoAntes.antes} r={5} fill={cores.antes} stroke={t.superficie} strokeWidth={2} label={{ value: `sem plano: ${numero(picoAntes.antes)} ms`, position: 'top', fill: t.texto, fontSize: 12, fontWeight: 600 }} />
             </LineChart>
           </ResponsiveContainer>
         </div>
-      </div>
+      </section>
 
-      <div className="card secao">
+      <section className="card secao">
         <div className="card-cab">
           <div>
-            <h3>O que o aluno vê · FILA_VIRTUAL=1</h3>
-            <div className="meta">asyncio.Semaphore({CONTEXTO.capacidade}) · quem entra tem latência estável</div>
+            <h2>O que o aluno vê com a fila virtual</h2>
+            <p>FILA_VIRTUAL=1 · asyncio.Semaphore({CONTEXTO.capacidade}) · quem entra navega com latência estável</p>
           </div>
         </div>
         <div className="card-corpo">
-          <div className="grade-2e">
-            <div className="fila-mock">
+          <div className="grade g-2e">
+            <div className="fila-mock" aria-label="Exemplo da tela de espera do portal">
               <div className="barra-nav">
                 <span className="ponto" /><span className="ponto" /><span className="ponto" />
                 <span className="url">portal.ibmec.br/login</span>
               </div>
+              <div className="portal-topo">
+                <b>Portal do aluno</b>
+                <span>Sala de espera</span>
+              </div>
               <div className="tela">
-                <div className="eyebrow">Sala de espera · AV1 online</div>
+                <div className="rot">Sua posição na fila do Teste de Progresso</div>
                 <div className="pos">132<small>º</small></div>
-                <div style={{ color: 'var(--texto-2)', fontSize: 13 }}>Sua vez chega em cerca de 40 segundos. Não feche nem recarregue esta página.</div>
+                <p>Sua vez chega em cerca de 40 segundos. Não feche nem recarregue esta página.</p>
                 <div className="progresso"><span /></div>
-                <div className="meta">posição estável · sem 503 · sessão garantida</div>
+                <div className="meta">posição estável · sem erro 503 · sessão garantida</div>
               </div>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 14 }}>
-              <div>
-                <div className="eyebrow">Sem fila</div>
-                <p style={{ margin: '6px 0 0', color: 'var(--texto-2)', fontSize: 13 }}>Acima de 1,5× a capacidade a rota devolve 503 e todo mundo recarrega, o que piora o pico. A latência cresce com o cubo da ocupação.</p>
+            <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+              <div className="explica">
+                <h3><TriangleAlert size={16} style={{ color: 'var(--critico)' }} aria-hidden="true" />Sem fila</h3>
+                <p>Acima de 1,5× a capacidade a rota devolve 503 e todo mundo recarrega, o que piora o pico. A latência cresce com o cubo da ocupação.</p>
               </div>
-              <div>
-                <div className="eyebrow">Com fila</div>
-                <p style={{ margin: '6px 0 0', color: 'var(--texto-2)', fontSize: 13 }}>O semáforo segura a concorrência na capacidade. Quem está dentro navega normal; quem espera vê a posição andar, em vez de erro.</p>
+              <div className="explica">
+                <h3><ShieldCheck size={16} style={{ color: 'var(--ok)' }} aria-hidden="true" />Com fila</h3>
+                <p>O semáforo segura a concorrência na capacidade. Quem está dentro navega normal; quem espera vê a posição andar, em vez de erro.</p>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      <p className="nota-previa">Prévia com números simulados. Na E8 estes valores vêm de carga/comparar.py.</p>
+      <p className="nota-rodape">
+        <Info size={15} aria-hidden="true" /> Prévia com números simulados. Na E8 estes valores vêm de carga/comparar.py.
+      </p>
     </>
   )
 }

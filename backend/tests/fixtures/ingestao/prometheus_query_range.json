@@ -1,0 +1,4 @@
+{"status": "success", "data": {"resultType": "matrix", "result": [
+  {"metric": {"__name__": "portal_sessoes_ativas", "instance": "a"}, "values": [[1789091100, "120"], [1789091400, "130"], [1789092000, "60"]]},
+  {"metric": {"__name__": "portal_sessoes_ativas", "instance": "b"}, "values": [[1789091100, "80"], [1789091400, "75"], [1789092000, "40"]]}
+]}}

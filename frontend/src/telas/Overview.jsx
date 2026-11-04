@@ -1,254 +1,254 @@
 // frontend/src/telas/Overview.jsx
-// Visão geral: abre com a fita de capacidade do semestre (a assinatura do produto),
-// os indicadores de operação/SLO, os eventos, o registro do modelo e a fonte dos dados.
-import { Fragment, useMemo, useState } from 'react'
-import ChipTipo from '../componentes/ChipTipo'
-import { CONTEXTO, DIAS_RISCO, EVENTOS, TRILHA_GEMINI, picoDoDia } from '../dados/previa'
-import { FONTES } from '../dados/fontes'
-import { nivelDaGravidade } from '../tema'
-import { curta, diasEntre, mesNome, numero, paraData, semana } from '../util'
+// Visão geral: o alerta do semestre, os números da operação, a faixa de capacidade
+// dia a dia (no estilo de status page), os dias de risco e o registro do Gemini.
+import { useMemo, useState } from 'react'
+import { ArrowRight, CalendarDays, ChevronDown, TriangleAlert } from 'lucide-react'
+import { CONTEXTO, DIAS_RISCO, TRILHA_GEMINI, picoDoDia } from '../dados/previa'
+import { UNIDADES } from '../dados/unidades'
+import { situacaoDaCarga } from '../tema'
+import { curta, diasEntre, mesNome, numero, paraData, paraIso, rotuloCurto, semana } from '../util'
 
 const risco = Object.fromEntries(DIAS_RISCO.map((r) => [r.data, r]))
 const feriado = Object.fromEntries(CONTEXTO.feriados.map((f) => [f.data, f.nome]))
-const FITA_PX = 76
+const vezes = (x) => `${x.toFixed(1).replace('.', ',')}×`
+const sem3 = (iso) => semana(iso).slice(0, 3)
 
-function fds(iso) {
+function fimDeSemana(iso) {
   const d = paraData(iso).getDay()
   return d === 0 || d === 6
 }
 
-function corDia(iso, pico, cap) {
-  const r = risco[iso]
-  if (r) return `var(--${nivelDaGravidade(r.gravidade).chave})`
-  if (feriado[iso]) return 'var(--borda-forte)'
-  if (pico >= cap) return 'var(--critico)'
-  if (pico >= cap * 0.8) return 'var(--serio)'
-  if (pico >= cap * 0.6) return 'var(--alerta)'
-  return 'color-mix(in srgb, var(--serie3) 40%, var(--superficie-3))'
-}
-
-function Fita({ unidade, abrirDia }) {
+function FaixaCapacidade({ unidade, abrirDia }) {
   const [dica, setDica] = useState(null)
-  const { dias, pontos, escala, cap } = useMemo(() => {
+  const cap = unidade.capacidade
+  const dias = useMemo(() => {
     const fator = unidade.alunos / CONTEXTO.alunos
-    const cap = unidade.capacidade
-    const dias = diasEntre(CONTEXTO.inicio, CONTEXTO.fim)
-    const pontos = dias.map((iso) => ({ iso, pico: Math.round(picoDoDia(iso).carga * fator) }))
-    const maxPico = Math.max(...pontos.map((p) => p.pico))
-    const escala = Math.max(cap * 1.7, maxPico * 1.08)
-    return { dias, pontos, escala, cap }
+    return diasEntre(CONTEXTO.inicio, CONTEXTO.fim).map((iso) => {
+      const p = picoDoDia(iso)
+      return { iso, pico: Math.round(p.carga * fator), hora: p.hora }
+    })
   }, [unidade])
 
-  const meses = []
-  dias.forEach((d, i) => {
-    if (i === 0 || d.endsWith('-01')) meses.push({ i, nome: mesNome(d).slice(0, 3) })
-  })
-  const capPx = Math.round((cap / escala) * FITA_PX)
+  const meses = dias.flatMap((d, i) => (i === 0 || d.iso.endsWith('-01') ? [{ i, nome: mesNome(d.iso).slice(0, 3) }] : []))
+  const hoje = paraIso(new Date())
+  const iHoje = dias.findIndex((d) => d.iso === hoje)
+  const pos = (i) => ((i + 0.5) / dias.length) * 100
 
   return (
-    <div className="fita" onMouseLeave={() => setDica(null)}>
-      <div className="fita-grade">
-        <div className="fita-linha-cap" style={{ bottom: capPx }}>
-          <b>cap {cap}</b>
+    <div className="faixa" onMouseLeave={() => setDica(null)}>
+      {iHoje >= 0 && (
+        <div className="faixa-hoje" style={{ left: `${pos(iHoje)}%` }}>
+          <span>hoje</span>
         </div>
-        {pontos.map((p, i) => {
-          const r = risco[p.iso]
-          const alt = Math.max(3, Math.round((p.pico / escala) * FITA_PX))
+      )}
+      <div className="faixa-dias">
+        {dias.map((d, i) => {
+          const s = situacaoDaCarga(d.pico, cap)
+          const r = risco[d.iso]
+          const classes = [
+            'faixa-dia',
+            feriado[d.iso] ? 'feriado' : s.chave !== 'folga' ? s.chave : fimDeSemana(d.iso) ? 'fds' : '',
+            r ? 'sinalizado clicavel' : '',
+          ].join(' ')
           return (
-            <div
-              key={p.iso}
-              className={`fita-col ${r ? 'risco' : ''}`}
-              onMouseEnter={() => setDica({ ...p, x: Math.min(94, Math.max(6, ((i + 0.5) / dias.length) * 100)), r })}
-              onClick={() => r && abrirDia(p.iso)}
-              role={r ? 'button' : undefined}
-              aria-label={r ? `${curta(p.iso)}: pico ${p.pico}, abrir plano` : undefined}
-            >
-              <div className="haste" style={{ height: alt, background: corDia(p.iso, p.pico, cap) }} />
-            </div>
+            <button
+              key={d.iso}
+              type="button"
+              className={classes}
+              onMouseEnter={() => setDica({ ...d, s, r, x: Math.min(93, Math.max(7, pos(i))) })}
+              onFocus={() => setDica({ ...d, s, r, x: Math.min(93, Math.max(7, pos(i))) })}
+              onClick={() => r && abrirDia(d.iso)}
+              tabIndex={r ? 0 : -1}
+              aria-label={`${curta(d.iso)}: pico ${d.pico}, ${s.rotulo}${r ? ', abrir plano do dia' : ''}`}
+            />
           )
         })}
       </div>
-      <div className="fita-eixo">
+      <div className="faixa-eixo">
         {meses.map((m) => (
           <span key={m.i} style={{ left: `${(m.i / dias.length) * 100}%` }}>{m.nome}</span>
         ))}
       </div>
       {dica && (
-        <div className="fita-dica" style={{ left: `${dica.x}%` }}>
-          <b className="mono">{curta(dica.iso)}</b> · {semana(dica.iso).slice(0, 3)} · pico <b className="mono">{numero(dica.pico)}</b>
-          {dica.r && <span className="mono"> · g{dica.r.gravidade} — clique</span>}
+        <div className="faixa-dica" style={{ left: `${dica.x}%` }}>
+          <b>{sem3(dica.iso)}, {curta(dica.iso)}</b>
+          {feriado[dica.iso] && <span className="fraco"> · {feriado[dica.iso]}</span>}
+          <div>
+            Pico de <b>{numero(dica.pico)}</b> às {dica.hora} <span className="fraco">· {Math.round((dica.pico / cap) * 100)}% da capacidade</span>
+          </div>
+          {dica.r && <div className="fraco">Gemini: gravidade {dica.r.gravidade} de 5 · clique para abrir o plano</div>}
         </div>
       )}
     </div>
   )
 }
 
-function agruparMes(eventos) {
-  const grupos = []
-  for (const ev of eventos) {
-    const mes = ev.data.slice(0, 7)
-    let g = grupos.find((x) => x.mes === mes)
-    if (!g) { g = { mes, nome: mesNome(ev.data), eventos: [] }; grupos.push(g) }
-    g.eventos.push(ev)
-  }
-  return grupos
-}
-
-export default function Overview({ unidade, abrirDia }) {
+export default function Overview({ unidade, setUnidadeId, abrirDia, irPara }) {
   const fator = unidade.alunos / CONTEXTO.alunos
   const cap = unidade.capacidade
-  const comPico = DIAS_RISCO.map((r) => ({ ...r, pico: Math.round(picoDoDia(r.data).carga * fator) }))
-  const acima = comPico.filter((d) => d.pico > cap)
-  const pior = Math.max(...comPico.map((d) => d.pico))
-  const letivos = diasEntre(CONTEXTO.inicio, CONTEXTO.fim).filter((iso) => {
-    const d = paraData(iso).getDay()
-    return d !== 0 && d !== 6 && !feriado[iso]
-  }).length
+  const dias = DIAS_RISCO.map((r) => {
+    const p = picoDoDia(r.data)
+    return { ...r, pico: Math.round(p.carga * fator), hora: p.hora }
+  }).sort((a, b) => a.data.localeCompare(b.data))
+  const acima = dias.filter((d) => d.pico > cap)
+  const pior = dias.reduce((a, b) => (b.pico > a.pico ? b : a))
+  const letivos = diasEntre(CONTEXTO.inicio, CONTEXTO.fim).filter((iso) => !fimDeSemana(iso) && !feriado[iso]).length
   const tokens = TRILHA_GEMINI.reduce((s, t) => s + (t.tokens || 0), 0)
   const consultas = TRILHA_GEMINI.filter((t) => t.ferramenta).length
-  const grupos = agruparMes(EVENTOS)
 
   return (
     <>
-      <div className="secao" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 16, flexWrap: 'wrap', marginBottom: 16 }}>
+      <header className="cab-pagina">
         <div>
-          <div className="eyebrow">Operação do portal · {unidade.nome}</div>
-          <h1 className="h-page">
-            <span className="destaque">{acima.length} dias</span> vão estourar a capacidade neste semestre.
-          </h1>
-          <p className="lide">
-            O Gemini lê o calendário acadêmico, consulta o histórico e aponta os dias de risco. O código calcula a
-            carga por janela de 15 minutos, valida o plano e prova o ganho sob carga. {unidade.modelada ? '' : `Projeção de ${unidade.curto} escalada a partir do modelo do Rio.`}
+          <h1>Visão geral</h1>
+          <p className="sub">
+            {unidade.nome} · {numero(unidade.alunos)} alunos · capacidade de {cap} acessos simultâneos
+            {!unidade.modelada && ' · projeção escalada a partir do modelo do Rio'}
           </p>
         </div>
-        <div className="nota-flag" title="Como a demo foi preenchida">● prévia · histórico modelado · ver Fonte de dados</div>
+        <div className="cab-acoes">
+          <label className="campo-select" title="Edital: RJ, SP, BH e DF">
+            <span className="rot">Unidade</span>
+            <select value={unidade.id} onChange={(e) => setUnidadeId(e.target.value)}>
+              {UNIDADES.map((u) => (
+                <option key={u.id} value={u.id}>{u.nome}</option>
+              ))}
+            </select>
+            <ChevronDown size={16} aria-hidden="true" />
+          </label>
+          <button className="botao primario" onClick={() => irPara('calendario')}>
+            <CalendarDays size={16} aria-hidden="true" />
+            Abrir calendário
+          </button>
+        </div>
+      </header>
+
+      <section className="card aviso secao">
+        <div className="aviso-icone"><TriangleAlert size={20} strokeWidth={2} aria-hidden="true" /></div>
+        <div className="aviso-corpo">
+          <h3>{acima.length} {acima.length === 1 ? 'dia vai' : 'dias vão'} passar da capacidade neste semestre</h3>
+          <p>
+            O pior é {sem3(pior.data)}, {curta(pior.data)}: pico de {numero(pior.pico)} acessos às {pior.hora},{' '}
+            {vezes(pior.pico / cap)} a capacidade. Fora desses dias, a infraestrutura atual dá conta.
+          </p>
+          <button className="link-seta" onClick={() => irPara('riscos')}>
+            Ver dias críticos <ArrowRight size={16} aria-hidden="true" />
+          </button>
+        </div>
+      </section>
+
+      <div className="grade g-4 secao">
+        <div className="card metrica critico">
+          <span className="rot">Dias acima da capacidade</span>
+          <span className="val">{acima.length}<small>de {dias.length} em risco</small></span>
+          <span className="det">apontados pelo Gemini, confirmados pelo cálculo</span>
+        </div>
+        <div className="card metrica">
+          <span className="rot">Pior pico projetado</span>
+          <span className="val">{numero(pior.pico)}<small>acessos</small></span>
+          <span className="det">{curta(pior.data)} às {pior.hora} · {Math.round((pior.pico / cap) * 100)}% da capacidade</span>
+        </div>
+        <div className="card metrica">
+          <span className="rot">Reforço de infraestrutura</span>
+          <span className="val">{acima.length}<small>de {letivos} dias letivos</small></span>
+          <span className="det">só nesses dias; no resto, a capacidade atual basta</span>
+        </div>
+        <div className="card metrica">
+          <span className="rot">Orçamento de erro usado</span>
+          <span className="val">18%</span>
+          <div className="barra-progresso"><span style={{ width: '18%' }} /></div>
+          <span className="det">SLO p95 &lt; 400 ms e 503 &lt; 0,5%, com o plano</span>
+        </div>
       </div>
 
-      <div className="grade-4 secao">
-        <div className="card tile">
-          <span className="k">Dias críticos</span>
-          <span className="v">{acima.length}<small>/ {comPico.length} em risco</small></span>
-          <span className="d">de {letivos} dias letivos no semestre</span>
-        </div>
-        <div className="card tile ruim">
-          <span className="k">Pior pico projetado</span>
-          <span className="v">{numero(pior)}<small>req</small></span>
-          <span className="d">{(pior / cap).toFixed(1).replace('.', ',')}× a capacidade de {cap}</span>
-        </div>
-        <div className="card tile bom">
-          <span className="k">Infra extra só em</span>
-          <span className="v">{acima.length}<small>/ {letivos} dias</small></span>
-          <span className="d">resto do semestre fica dentro da capacidade</span>
-        </div>
-        <div className="card tile">
-          <span className="k">SLO de capacidade</span>
-          <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <span className="selo-slo"><b className="mono">p95 &lt; 400 ms</b> · 503 &lt; 0,5%</span>
-            <div className="barra-budget"><span style={{ width: '18%', background: 'var(--bom)' }} /></div>
-            <span className="d" style={{ fontSize: 11 }}>orçamento de erro: 18% usado (com plano)</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="card secao">
+      <section className="card secao">
         <div className="card-cab">
           <div>
-            <h3>Capacidade do semestre · {unidade.curto}</h3>
-            <div className="meta">pico diário projetado × capacidade de {cap} acessos simultâneos · {CONTEXTO.semestre}</div>
+            <h2>Capacidade do semestre</h2>
+            <p>Pico diário projetado contra a capacidade de {cap} acessos simultâneos · {curta(CONTEXTO.inicio)} a {curta(CONTEXTO.fim)}</p>
           </div>
           <div className="legenda">
-            <span><i style={{ background: 'color-mix(in srgb, var(--serie3) 40%, var(--superficie-3))' }} />folga</span>
-            <span><i style={{ background: 'var(--alerta)' }} />atenção</span>
-            <span><i style={{ background: 'var(--serio)' }} />alto</span>
-            <span><i style={{ background: 'var(--critico)' }} />crítico</span>
-            <span><i className="linha" style={{ background: 'var(--critico)' }} />capacidade</span>
+            <span><i style={{ background: 'var(--folga)' }} />com folga</span>
+            <span><i style={{ background: 'var(--atencao)' }} />atenção</span>
+            <span><i style={{ background: 'var(--alto)' }} />perto do limite</span>
+            <span><i style={{ background: 'var(--critico)' }} />acima da capacidade</span>
+            <span><i className="hachura" />feriado</span>
+            <span><i className="redondo" style={{ background: 'var(--texto)' }} />apontado pelo Gemini</span>
           </div>
         </div>
         <div className="card-corpo">
-          <Fita unidade={unidade} abrirDia={abrirDia} />
+          <FaixaCapacidade unidade={unidade} abrirDia={abrirDia} />
         </div>
-      </div>
+      </section>
 
-      <div className="grade-2 secao">
-        <div className="card">
+      <div className="grade g-2 secao">
+        <section className="card">
           <div className="card-cab">
             <div>
-              <h3>Eventos do semestre</h3>
-              <div className="meta">{EVENTOS.length} eventos · extraídos pelo Gemini · response_schema list[Evento]</div>
+              <h2>Dias de risco</h2>
+              <p>{dias.length} dias apontados pelo Gemini · pico calculado pelo código · clique para abrir o plano</p>
             </div>
           </div>
-          <div className="card-corpo" style={{ paddingTop: 6, maxHeight: 420, overflow: 'auto' }}>
+          <div className="card-corpo">
             <table className="tabela">
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Eventos</th>
+                  <th className="dir">Pico</th>
+                  <th className="dir">Capacidade</th>
+                  <th>Situação</th>
+                </tr>
+              </thead>
               <tbody>
-                {grupos.map((g) => (
-                  <Fragment key={g.mes}>
-                    <tr className="mes"><td colSpan={3}><span className="eyebrow">{g.nome}</span></td></tr>
-                    {g.eventos.map((ev) => (
-                      <tr key={`${ev.data}-${ev.descricao}`} className={risco[ev.data] ? 'linha-risco' : ''}>
-                        <td style={{ width: 86 }}>
-                          <b className="num">{curta(ev.data)}</b>
-                          <div className="turmas">{ev.hora_inicio}</div>
-                        </td>
-                        <td style={{ width: 118 }}><ChipTipo tipo={ev.tipo} /></td>
-                        <td>
-                          {ev.descricao}
-                          {ev.turmas.length > 0 && <div className="turmas">{ev.turmas.join(' · ')}</div>}
-                        </td>
-                      </tr>
-                    ))}
-                  </Fragment>
-                ))}
+                {dias.map((d) => {
+                  const s = situacaoDaCarga(d.pico, cap)
+                  return (
+                    <tr key={d.data} className="clicavel" onClick={() => abrirDia(d.data)}>
+                      <td className="data-cel">
+                        <b>{curta(d.data)}</b>
+                        <span>{sem3(d.data)}</span>
+                      </td>
+                      <td className="fraco">{d.eventos.map(rotuloCurto).join(' · ')}</td>
+                      <td className="dir data-cel">
+                        <b>{numero(d.pico)}</b>
+                        <span>às {d.hora}</span>
+                      </td>
+                      <td className="dir num">{Math.round((d.pico / cap) * 100)}%</td>
+                      <td><span className={`pill ${s.chave}`}>{s.rotulo}</span></td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>
-        </div>
+        </section>
 
-        <div className="card">
+        <section className="card">
           <div className="card-cab">
             <div>
-              <h3>Registro do modelo</h3>
-              <div className="meta">{numero(tokens)} tokens · {consultas} consultas · auditado por cliente.py</div>
+              <h2>Registro do Gemini</h2>
+              <p>{numero(tokens)} tokens · {consultas} consultas ao histórico · auditado por cliente.py</p>
             </div>
           </div>
-          <div className="card-corpo" style={{ maxHeight: 420, overflow: 'auto' }}>
-            <ul className="log">
+          <div className="card-corpo">
+            <ol className="log">
               {TRILHA_GEMINI.map((t, i) => (
-                <li key={i}>
-                  <span className="t">{t.hora}</span>
-                  <div className={t.ferramenta ? 'tool' : ''}>
-                    <div className="etapa">{t.etapa}</div>
-                    <div className="obs">
+                <li key={i} className={t.ferramenta ? 'ferramenta' : ''}>
+                  <time>{t.hora}</time>
+                  <div className="passo">
+                    <b>{t.etapa}</b>
+                    <p>
                       {t.detalhe}
                       {t.tempo && ` · ${t.tempo}`}
-                      {t.tokens && ` · ${numero(t.tokens)} tok`}
-                    </div>
+                      {t.tokens && ` · ${numero(t.tokens)} tokens`}
+                    </p>
                   </div>
                 </li>
               ))}
-            </ul>
+            </ol>
           </div>
-        </div>
-      </div>
-
-      <div className="card secao">
-        <div className="card-cab">
-          <div>
-            <h3>Fonte de dados</h3>
-            <div className="meta">o que é medido e o que é modelado · honesto para a banca</div>
-          </div>
-        </div>
-        <div className="card-corpo" style={{ paddingTop: 2 }}>
-          {FONTES.map((f) => (
-            <div key={f.titulo} className="fonte">
-              <span className={`tag ${f.tipo === 'real' ? 'real' : 'modelo'}`}>{f.tipo === 'real' ? 'real' : 'modelo'}</span>
-              <div className="corpo">
-                <b>{f.titulo}</b>
-                <p>{f.texto}</p>
-                <span className="mono">{f.mono}</span>
-              </div>
-            </div>
-          ))}
-        </div>
+        </section>
       </div>
     </>
   )

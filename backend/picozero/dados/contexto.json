@@ -1,0 +1,43 @@
+{
+  "instituicao": "Ibmec",
+  "grupo": "Yduqs",
+  "unidade_padrao": "rj",
+  "unidades": [
+    {"id": "rj", "nome": "Rio de Janeiro · Barra", "curto": "RJ", "alunos": 8000, "capacidade": 500, "modelada": true},
+    {"id": "sp", "nome": "São Paulo", "curto": "SP", "alunos": 6500, "capacidade": 420, "modelada": false},
+    {"id": "bh", "nome": "Belo Horizonte", "curto": "BH", "alunos": 4000, "capacidade": 300, "modelada": false},
+    {"id": "df", "nome": "Brasília", "curto": "DF", "alunos": 2500, "capacidade": 200, "modelada": false}
+  ],
+  "semestre": {"nome": "2026.2", "inicio": "2026-08-03", "fim": "2026-12-07"},
+  "periodos_letivos": [
+    {"nome": "2025.2", "inicio": "2025-08-04", "fim": "2025-12-13"},
+    {"nome": "2026.1", "inicio": "2026-02-09", "fim": "2026-07-04"},
+    {"nome": "2026.2", "inicio": "2026-08-03", "fim": "2026-12-07"}
+  ],
+  "historico": {"inicio": "2025-08-01", "fim": "2026-11-03", "observacao": "histórico MODELADO (seed fixa) até a véspera do Innovation Day; substituível por export real"},
+  "feriados": [
+    {"data": "2025-09-07", "nome": "Independência do Brasil"},
+    {"data": "2025-10-12", "nome": "Nossa Senhora Aparecida"},
+    {"data": "2025-10-15", "nome": "Dia do Professor (recesso)"},
+    {"data": "2025-11-02", "nome": "Finados"},
+    {"data": "2025-11-15", "nome": "Proclamação da República"},
+    {"data": "2025-11-20", "nome": "Consciência Negra"},
+    {"data": "2025-12-25", "nome": "Natal"},
+    {"data": "2026-01-01", "nome": "Confraternização Universal"},
+    {"data": "2026-01-20", "nome": "São Sebastião (Rio)"},
+    {"data": "2026-02-16", "nome": "Carnaval"},
+    {"data": "2026-02-17", "nome": "Carnaval"},
+    {"data": "2026-04-03", "nome": "Sexta-feira Santa"},
+    {"data": "2026-04-21", "nome": "Tiradentes"},
+    {"data": "2026-04-23", "nome": "São Jorge (RJ)"},
+    {"data": "2026-05-01", "nome": "Dia do Trabalho"},
+    {"data": "2026-06-04", "nome": "Corpus Christi"},
+    {"data": "2026-09-07", "nome": "Independência do Brasil"},
+    {"data": "2026-10-12", "nome": "Nossa Senhora Aparecida"},
+    {"data": "2026-10-15", "nome": "Dia do Professor (recesso)"},
+    {"data": "2026-11-02", "nome": "Finados"},
+    {"data": "2026-11-15", "nome": "Proclamação da República"},
+    {"data": "2026-11-20", "nome": "Consciência Negra"},
+    {"data": "2026-12-25", "nome": "Natal"}
+  ]
+}

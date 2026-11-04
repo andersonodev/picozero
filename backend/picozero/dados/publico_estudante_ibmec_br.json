@@ -1,0 +1,32 @@
+{
+  "dominio": "estudante.ibmec.br",
+  "fonte": "Domsilo Traffic Index (estimativa pública de tráfego por painel; não é log do servidor)",
+  "url": "https://domsilo.com/estudante.ibmec.br",
+  "coletado_em": "2026-11-04",
+  "coleta": "lido da página aberta na sessão do usuário (gráfico Visits Over Time, faixa 1Y)",
+  "snapshot": {
+    "mes": "2026-09",
+    "visitas": 163972,
+    "duracao_media_s": 173,
+    "paginas_por_visita": 3.95,
+    "taxa_rejeicao": 0.2008,
+    "variacao_mes_anterior": -0.058,
+    "fontes": {"direto": 0.526, "busca_organica": 0.188, "social": 0.09, "referencias": 0.174, "email": 0.003, "assistentes_ia": 0.019},
+    "palavras_chave": ["sava ibmec", "ibmec sava", "sala de aula ibmec", "sala de aula online ibmec"]
+  },
+  "visitas_mensais": [
+    {"mes": "2025-09", "visitas": 80080},
+    {"mes": "2025-10", "visitas": 58878},
+    {"mes": "2025-11", "visitas": 79180},
+    {"mes": "2025-12", "visitas": 27413},
+    {"mes": "2026-01", "visitas": 24222},
+    {"mes": "2026-02", "visitas": 41958},
+    {"mes": "2026-03", "visitas": 126574},
+    {"mes": "2026-04", "visitas": 109597},
+    {"mes": "2026-05", "visitas": 100476},
+    {"mes": "2026-06", "visitas": 117419},
+    {"mes": "2026-07", "visitas": 45590},
+    {"mes": "2026-08", "visitas": 174147},
+    {"mes": "2026-09", "visitas": 163972}
+  ]
+}

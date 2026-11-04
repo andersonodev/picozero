@@ -1,22 +1,39 @@
 // frontend/src/App.jsx
+// Shell do console: menu lateral (identidade Yduqs) + a tela ativa, com rota por hash.
 import { useEffect, useState } from 'react'
+import { CalendarDays, ClipboardCheck, Database, Gauge, Info, LayoutGrid, Moon, Sun, TriangleAlert } from 'lucide-react'
 import { CONTEXTO, DIAS_RISCO, picoDoDia } from './dados/previa'
-import { UNIDADE_PADRAO, UNIDADES, unidadePorId } from './dados/unidades'
+import { UNIDADE_PADRAO, unidadePorId } from './dados/unidades'
 import { temaEscuroAtivo } from './tema'
 import Overview from './telas/Overview'
 import Calendario from './telas/Calendario'
 import DiasRisco from './telas/DiasRisco'
 import DetalheDia from './telas/DetalheDia'
 import ProvaCarga from './telas/ProvaCarga'
-import { numero } from './util'
+import Fontes from './telas/Fontes'
 
-const TABS = [
-  { chave: 'visao', nome: 'Visão geral' },
-  { chave: 'calendario', nome: 'Calendário' },
-  { chave: 'riscos', nome: 'Dias críticos' },
-  { chave: 'dia', nome: 'Plano do dia' },
-  { chave: 'carga', nome: 'Prova de carga' },
+const GRUPOS = [
+  {
+    nome: 'Operação',
+    itens: [
+      { chave: 'visao', nome: 'Visão geral', Icone: LayoutGrid },
+      { chave: 'calendario', nome: 'Calendário', Icone: CalendarDays },
+      { chave: 'riscos', nome: 'Dias críticos', Icone: TriangleAlert, contador: true },
+    ],
+  },
+  {
+    nome: 'Ação',
+    itens: [
+      { chave: 'dia', nome: 'Plano do dia', Icone: ClipboardCheck },
+      { chave: 'carga', nome: 'Prova de carga', Icone: Gauge },
+    ],
+  },
+  {
+    nome: 'Dados',
+    itens: [{ chave: 'fontes', nome: 'Fonte de dados', Icone: Database }],
+  },
 ]
+const TELAS = GRUPOS.flatMap((g) => g.itens.map((i) => i.chave))
 
 // Tema persistido; começa claro (melhor em projetor), respeita escolha anterior.
 try {
@@ -25,8 +42,11 @@ try {
 
 function telaDoHash() {
   const c = window.location.hash.slice(1)
-  return TABS.some((t) => t.chave === c) ? c : 'visao'
+  return TELAS.includes(c) ? c : 'visao'
 }
+
+// Dias de risco (RJ) cujo pico calculado passa da capacidade: o contador do menu.
+const CRITICOS = DIAS_RISCO.filter((r) => picoDoDia(r.data).carga > CONTEXTO.capacidade).length
 
 export default function App() {
   const [tela, setTela] = useState(telaDoHash)
@@ -58,69 +78,68 @@ export default function App() {
     setTela('dia')
   }
 
-  // Farol da operação: dias de risco (RJ) que passam da capacidade.
-  const criticos = DIAS_RISCO.filter((r) => picoDoDia(r.data).carga > CONTEXTO.capacidade).length
-
   return (
-    <>
-      <header className="appbar">
-        <div className="marca">
-          <div className="marca-glifo" aria-hidden="true">
-            <span>
-              <i style={{ height: 5 }} />
-              <i style={{ height: 9 }} />
-              <i style={{ height: 14 }} />
-              <i style={{ height: 7 }} />
-            </span>
-          </div>
-          <div>
-            <div className="marca-nome">PicoZero</div>
-            <div className="marca-sub">Console de capacidade · Yduqs</div>
-          </div>
+    <div className="app">
+      <aside className="sidebar">
+        <div className="sb-marca">
+          <span className="sb-logo" aria-hidden="true">
+            <i style={{ height: 11 }} />
+            <i style={{ height: 22 }} />
+            <i style={{ height: 15 }} />
+          </span>
+          <span className="sb-nome">PicoZero</span>
         </div>
 
-        <div className="appbar-sep" />
+        <div className="sb-contexto">
+          <b>{CONTEXTO.instituicao} · {CONTEXTO.semestre}</b>
+          <span>Portal do aluno · Yduqs</span>
+        </div>
 
-        <nav className="tabs" aria-label="Seções">
-          {TABS.map((t, i) => (
-            <button
-              key={t.chave}
-              className={`tab ${tela === t.chave ? 'ativo' : ''}`}
-              onClick={() => setTela(t.chave)}
-              aria-current={tela === t.chave ? 'page' : undefined}
-            >
-              <span className="ix">{String(i + 1).padStart(2, '0')}</span>
-              <span>{t.nome}</span>
-            </button>
+        <nav className="sb-nav" aria-label="Seções">
+          {GRUPOS.map((g) => (
+            <div key={g.nome} className="sb-grupo">
+              <div className="sb-grupo-rot">{g.nome}</div>
+              {g.itens.map(({ chave, nome, Icone, contador }) => (
+                <button
+                  key={chave}
+                  className={`sb-item ${tela === chave ? 'ativo' : ''}`}
+                  onClick={() => setTela(chave)}
+                  aria-current={tela === chave ? 'page' : undefined}
+                  title={nome}
+                >
+                  <Icone size={18} strokeWidth={1.8} aria-hidden="true" />
+                  <span className="rotulo-item">{nome}</span>
+                  {contador && CRITICOS > 0 && (
+                    <span className="sb-badge" aria-label={`${CRITICOS} dias acima da capacidade`}>{CRITICOS}</span>
+                  )}
+                </button>
+              ))}
+            </div>
           ))}
         </nav>
 
-        <div className="appbar-dir">
-          <span className={`status-pill ${criticos > 0 ? 'risco' : 'ok'}`}>
-            <span className="farol" />
-            {criticos > 0 ? `${criticos} dias críticos` : 'operação estável'}
-          </span>
-          <label className="select" title="Unidade (edital: RJ, SP, BH, DF)">
-            <span className="mono" style={{ fontSize: 11, color: 'var(--mudo)' }}>unidade</span>
-            <select value={unidadeId} onChange={(e) => setUnidadeId(e.target.value)}>
-              {UNIDADES.map((u) => (
-                <option key={u.id} value={u.id}>{u.curto} · {numero(u.alunos)} alunos</option>
-              ))}
-            </select>
-          </label>
-          <button className="icon-btn" onClick={alternarTema} aria-label="Alternar tema" title="Alternar tema claro/escuro">
-            {escuro ? '☀' : '☾'}
+        <div className="sb-rodape">
+          <button className="sb-nota" onClick={() => setTela('fontes')}>
+            <Info size={15} strokeWidth={2} aria-hidden="true" />
+            <span>Prévia: calendário real do Ibmec RJ, histórico de acesso modelado.</span>
+          </button>
+          <button className="sb-item" onClick={alternarTema} title="Alternar tema claro/escuro">
+            {escuro ? <Sun size={18} strokeWidth={1.8} aria-hidden="true" /> : <Moon size={18} strokeWidth={1.8} aria-hidden="true" />}
+            <span className="rotulo-item">{escuro ? 'Tema claro' : 'Tema escuro'}</span>
           </button>
         </div>
-      </header>
+      </aside>
 
-      <main className="pagina">
-        {tela === 'visao' && <Overview unidade={unidade} abrirDia={abrirDia} />}
-        {tela === 'calendario' && <Calendario abrirDia={abrirDia} />}
-        {tela === 'riscos' && <DiasRisco abrirDia={abrirDia} />}
-        {tela === 'dia' && <DetalheDia dia={dia} setDia={setDia} />}
-        {tela === 'carga' && <ProvaCarga />}
-      </main>
-    </>
+      <div className="conteudo">
+        <main className="pagina">
+          {tela === 'visao' && <Overview unidade={unidade} setUnidadeId={setUnidadeId} abrirDia={abrirDia} irPara={setTela} />}
+          {tela === 'calendario' && <Calendario dia={dia} abrirDia={abrirDia} />}
+          {tela === 'riscos' && <DiasRisco abrirDia={abrirDia} />}
+          {tela === 'dia' && <DetalheDia dia={dia} setDia={setDia} />}
+          {tela === 'carga' && <ProvaCarga />}
+          {tela === 'fontes' && <Fontes />}
+        </main>
+      </div>
+    </div>
   )
 }

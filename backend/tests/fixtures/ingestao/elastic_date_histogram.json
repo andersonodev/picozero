@@ -1,0 +1,14 @@
+{
+  "took": 12,
+  "timed_out": false,
+  "hits": {"total": {"value": 5321, "relation": "eq"}, "hits": []},
+  "aggregations": {
+    "acessos_15m": {
+      "buckets": [
+        {"key_as_string": "2026-09-10T22:45:00.000-03:00", "key": 1789091100000, "doc_count": 5000, "sessoes_unicas": {"value": 321}},
+        {"key_as_string": "2026-09-10T23:00:00.000-03:00", "key": 1789092000000, "doc_count": 4100, "sessoes_unicas": {"value": 290}},
+        {"key_as_string": "2026-09-10T23:15:00.000-03:00", "key": 1789092900000, "doc_count": 0, "sessoes_unicas": {"value": null}}
+      ]
+    }
+  }
+}

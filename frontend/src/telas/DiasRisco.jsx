@@ -1,17 +1,11 @@
 // frontend/src/telas/DiasRisco.jsx
-// Tela 2: os dias de risco com gravidade e motivo escritos pelo Gemini.
+// Os dias de risco com gravidade e motivo escritos pelo Gemini; o pico vem do cálculo.
+import { ArrowRight } from 'lucide-react'
+import ChipTipo from '../componentes/ChipTipo'
 import Gravidade from '../componentes/Gravidade'
 import { CONTEXTO, DIAS_RISCO, EVENTOS, picoDoDia } from '../dados/previa'
-import { completa, curta, diasEntre, numero, paraData, semana } from '../util'
-
-function Kpi({ valor, texto }) {
-  return (
-    <div className="cartao kpi">
-      <div className="numero">{valor}</div>
-      <p>{texto}</p>
-    </div>
-  )
-}
+import { situacaoDaCarga } from '../tema'
+import { completa, curta, numero, paraData, rotuloCurto, semana } from '../util'
 
 function tipoDoEvento(data, descricao) {
   return EVENTOS.find((e) => e.data === data && e.descricao === descricao)?.tipo || 'outro'
@@ -23,81 +17,84 @@ export default function DiasRisco({ abrirDia }) {
     .sort((a, b) => b.gravidade - a.gravidade || a.data.localeCompare(b.data))
     .map((r) => ({ ...r, pico: picoDoDia(r.data) }))
   const acima = dias.filter((d) => d.pico.carga > cap)
-  const pior = Math.max(...dias.map((d) => d.pico.carga))
-  const letivos = diasEntre(CONTEXTO.inicio, CONTEXTO.fim).filter((iso) => {
-    const semanaDia = paraData(iso).getDay()
-    return semanaDia !== 0 && semanaDia !== 6 && !CONTEXTO.feriados.some((f) => f.data === iso)
-  }).length
+  const pior = dias.reduce((a, b) => (b.pico.carga > a.pico.carga ? b : a))
   const consultas = new Set(DIAS_RISCO.flatMap((r) => r.consultados)).size
 
   return (
     <>
-      <header style={{ marginBottom: 24 }}>
-        <div className="eyebrow">Dias críticos · análise do Gemini</div>
-        <h1 className="h-page">
-          {acima.length} dias passam da capacidade no semestre.
-        </h1>
-        <p className="lide">
-          O Gemini decidiu sozinho quais dias do histórico consultar ({consultas} consultas) e escreveu o motivo de
-          cada alerta. A gravidade vem dele; a carga vem do cálculo determinístico.
-        </p>
+      <header className="cab-pagina">
+        <div>
+          <h1>Dias críticos</h1>
+          <p className="sub">O Gemini escolhe quais dias do histórico consultar e escreve o motivo de cada alerta. A gravidade vem dele; a carga, do cálculo.</p>
+        </div>
       </header>
 
-      <div className="grade-4" style={{ marginBottom: 20 }}>
-        <Kpi valor={DIAS_RISCO.length} texto="dias de risco apontados pelo Gemini" />
-        <Kpi valor={acima.length} texto={`passam da capacidade de ${cap} acessos simultâneos`} />
-        <Kpi valor={`${(pior / cap).toFixed(1).replace('.', ',')}×`} texto="o pior pico em relação à capacidade" />
-        <Kpi valor={`${acima.length}/${letivos}`} texto="dias letivos precisam de infraestrutura extra" />
+      <div className="grade g-4 secao">
+        <div className="card metrica">
+          <span className="rot">Apontados pelo Gemini</span>
+          <span className="val">{dias.length}<small>dias</small></span>
+          <span className="det">de risco no semestre {CONTEXTO.semestre}</span>
+        </div>
+        <div className="card metrica critico">
+          <span className="rot">Acima da capacidade</span>
+          <span className="val">{acima.length}<small>dias</small></span>
+          <span className="det">passam de {cap} acessos simultâneos</span>
+        </div>
+        <div className="card metrica">
+          <span className="rot">Pior pico</span>
+          <span className="val">{(pior.pico.carga / cap).toFixed(1).replace('.', ',')}×<small>a capacidade</small></span>
+          <span className="det">{curta(pior.data)} às {pior.pico.hora} · {numero(pior.pico.carga)} acessos</span>
+        </div>
+        <div className="card metrica">
+          <span className="rot">Consultas ao histórico</span>
+          <span className="val">{consultas}<small>dias</small></span>
+          <span className="det">que o próprio Gemini pediu para ver</span>
+        </div>
       </div>
 
-
-      <section className="cartao">
-        <div className="cartao-topo">
+      <section className="card secao">
+        <div className="card-cab">
           <div>
-            <h3>Dias de risco por gravidade</h3>
-            <p>list[DiaRisco] · gravidade, eventos e motivo escritos pelo Gemini · pico calculado pelo código</p>
+            <h2>Por gravidade</h2>
+            <p>list[DiaRisco] escrito pelo Gemini · pico calculado pelo código</p>
           </div>
         </div>
-        {dias.map((d) => (
-          <article key={d.data} className="dia-risco">
-            <div>
-              <div className="dia-data">{curta(d.data)}</div>
-              <div className="dia-semana">{semana(d.data)}</div>
-              <div style={{ marginTop: 10 }}>
-                <Gravidade valor={d.gravidade} />
-              </div>
-            </div>
-            <div>
-              <div className="dia-chips">
-                {d.eventos.map((e) => (
-                  <span key={e} className={`chip ${tipoDoEvento(d.data, e)}`}>
-                    <i />
-                    {e}
-                  </span>
-                ))}
-              </div>
-              <p className="dia-motivo">{d.motivo}</p>
-              <div className="consultas">
-                Pico calculado <b className="mono">{numero(d.pico.carga)}</b> às {d.pico.hora}
-                {d.pico.carga > cap ? ` (${Math.round((d.pico.carga / cap) * 100)}% da capacidade)` : ''}
-                {d.consultados.length > 0 && (
-                  <>
-                    {' · consultou no histórico: '}
-                    {d.consultados.map((c, i) => (
-                      <span key={c} className="mono">
-                        {i > 0 && ', '}
-                        {completa(c)}
-                      </span>
+        <div style={{ marginTop: 8 }}>
+          {dias.map((d) => {
+            const s = situacaoDaCarga(d.pico.carga, cap)
+            const dt = paraData(d.data)
+            return (
+              <article key={d.data} className="risco-item">
+                <div className={`risco-data ${s.chave === 'critico' ? 'critico' : ''}`}>
+                  <b>{dt.getDate()}</b>
+                  <span>{dt.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '')} · {semana(d.data).slice(0, 3)}</span>
+                </div>
+                <div className="risco-corpo">
+                  <div className="risco-titulo">
+                    <Gravidade valor={d.gravidade} />
+                    <span className={`pill ${s.chave}`}>{s.rotulo}</span>
+                  </div>
+                  <div className="risco-chips">
+                    {d.eventos.map((e) => (
+                      <ChipTipo key={e} tipo={tipoDoEvento(d.data, e)} texto={rotuloCurto(e)} />
                     ))}
-                  </>
-                )}
-              </div>
-            </div>
-            <button className="botao" onClick={() => abrirDia(d.data)}>
-              Abrir dia →
-            </button>
-          </article>
-        ))}
+                  </div>
+                  <p className="risco-motivo">{d.motivo}</p>
+                  <div className="risco-meta">
+                    <span>Pico calculado <b>{numero(d.pico.carga)}</b> às {d.pico.hora}</span>
+                    <span><b>{Math.round((d.pico.carga / cap) * 100)}%</b> da capacidade</span>
+                    {d.consultados.length > 0 && <span>Consultou {d.consultados.map(completa).join(', ')}</span>}
+                  </div>
+                </div>
+                <div className="risco-acoes">
+                  <button className="botao" onClick={() => abrirDia(d.data)}>
+                    Abrir plano <ArrowRight size={16} aria-hidden="true" />
+                  </button>
+                </div>
+              </article>
+            )
+          })}
+        </div>
       </section>
     </>
   )

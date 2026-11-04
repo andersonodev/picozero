@@ -1,0 +1,6 @@
+{"index": {"_index": "apm-rum-2026.09"}}
+{"@timestamp": "2026-09-11T01:45:10.000Z", "user": {"id": "u1"}, "transaction": {"duration": {"us": 12000}}, "http": {"response": {"status_code": 200}}}
+{"@timestamp": "2026-09-11T01:47:00.000Z", "user": {"id": "u2"}, "transaction": {"duration": {"us": 9000}}, "http": {"response": {"status_code": 200}}}
+{"@timestamp": "2026-09-11T01:52:00.000Z", "user": {"id": "u1"}, "transaction": {"duration": {"us": 15000}}, "http": {"response": {"status_code": 503}}}
+{"@timestamp": "2026-09-11T02:01:00.000Z", "user": {"id": "u3"}, "transaction": {"duration": {"us": 8000}}, "http": {"response": {"status_code": 200}}}
+isto não é json

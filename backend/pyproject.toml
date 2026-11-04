@@ -1,0 +1,26 @@
+[project]
+name = "picozero-backend"
+version = "0.1.0"
+description = "PicoZero · motor de previsão de picos de acesso do portal acadêmico (FastAPI + Gemini + MCP)"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi[standard]",
+    "google-genai",
+    "mcp",
+    "openpyxl",
+    "pypdf",
+    "tzdata",
+]
+
+[dependency-groups]
+dev = ["pytest", "ruff"]
+
+[tool.fastapi]
+entrypoint = "picozero.api:app"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 120

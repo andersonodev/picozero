@@ -16,3 +16,7 @@ __pycache__/
 venv/
 # sistema
 .DS_Store
+# banco local (gerado em runtime)
+*.db
+*.db-shm
+*.db-wal

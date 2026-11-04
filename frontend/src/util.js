@@ -50,3 +50,32 @@ export function diasEntre(inicio, fim) {
   }
   return dias
 }
+
+// Rótulos curtos para caber nas células do calendário e nas tabelas.
+// Só apresentação: descrição desconhecida (ex.: vinda da API) aparece inteira.
+const CURTOS = {
+  'Início do período letivo (veteranos)': 'Início das aulas (veteranos)',
+  'Início do período letivo (calouros)': 'Início das aulas (calouros)',
+  'Vencimento da 2ª parcela da semestralidade': 'Vencimento 2ª parcela',
+  'Vencimento da 3ª parcela da semestralidade': 'Vencimento 3ª parcela',
+  'Vencimento da 4ª parcela (10/10 cai no sábado)': 'Vencimento 4ª parcela',
+  'Vencimento da 5ª parcela da semestralidade': 'Vencimento 5ª parcela',
+  'Aplicação do Teste de Progresso': 'Teste de Progresso',
+  'Divulgação de notas da Avaliação Contínua (AC)': 'Notas da AC',
+  'Prazo final de notas da Avaliação Contínua (AC)': 'Prazo de notas da AC',
+  'Fim da renovação de matrícula online 2026.2': 'Fim da rematrícula',
+  'Fim dos prazos de ajuste de disciplinas pelo portal': 'Fim dos ajustes de disciplina',
+  'AP1 online · início do período': 'AP1 online',
+  'Abertura da AP2 online': 'Abertura da AP2 online',
+  'Divulgação de notas das Avaliações Parciais AP1': 'Notas da AP1',
+  'Divulgação de notas finais (AS e Teste de Progresso)': 'Notas finais',
+  'Conclusão do período letivo 2026.2': 'Fim do período letivo',
+}
+
+export function rotuloCurto(descricao) {
+  return CURTOS[descricao] || descricao
+}
+
+export function capitalizar(texto) {
+  return texto.charAt(0).toUpperCase() + texto.slice(1)
+}

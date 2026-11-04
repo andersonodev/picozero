@@ -1,0 +1,466 @@
+{
+ "parametros": {
+  "data": "2026-09-10",
+  "controle": "2026-09-09",
+  "unidade": "rj",
+  "capacidade": 500,
+  "fator": 0.12,
+  "capacidade_simulada": 60,
+  "segundos_por_janela": 0.3,
+  "janelas": "08:00–23:45 a cada 60 min",
+  "url": "http://127.0.0.1:8765",
+  "quando": "2026-11-04T12:46:41"
+ },
+ "perfis": {
+  "antes": {
+   "requisicoes": 1676,
+   "status": {
+    "200": 1580,
+    "503": 96
+   },
+   "taxa_503": 0.0573,
+   "p50_servico_ms": 121,
+   "p95_servico_ms": 374,
+   "p50_total_ms": 712,
+   "p95_total_ms": 2038,
+   "p95_espera_fila_ms": 0,
+   "por_janela": [
+    {
+     "hora": "08:00",
+     "usuarios": 11,
+     "p95_servico_ms": 121,
+     "taxa_503": 0.0
+    },
+    {
+     "hora": "09:00",
+     "usuarios": 158,
+     "p95_servico_ms": 460,
+     "taxa_503": 0.2406
+    },
+    {
+     "hora": "10:00",
+     "usuarios": 120,
+     "p95_servico_ms": 121,
+     "taxa_503": 0.0
+    },
+    {
+     "hora": "11:00",
+     "usuarios": 120,
+     "p95_servico_ms": 260,
+     "taxa_503": 0.0
+    },
+    {
+     "hora": "12:00",
+     "usuarios": 117,
+     "p95_servico_ms": 124,
+     "taxa_503": 0.0
+    },
+    {
+     "hora": "13:00",
+     "usuarios": 116,
+     "p95_servico_ms": 124,
+     "taxa_503": 0.0
+    },
+    {
+     "hora": "14:00",
+     "usuarios": 117,
+     "p95_servico_ms": 123,
+     "taxa_503": 0.0
+    },
+    {
+     "hora": "15:00",
+     "usuarios": 118,
+     "p95_servico_ms": 512,
+     "taxa_503": 0.2047
+    },
+    {
+     "hora": "16:00",
+     "usuarios": 118,
+     "p95_servico_ms": 121,
+     "taxa_503": 0.0
+    },
+    {
+     "hora": "17:00",
+     "usuarios": 119,
+     "p95_servico_ms": 137,
+     "taxa_503": 0.0
+    },
+    {
+     "hora": "18:00",
+     "usuarios": 93,
+     "p95_servico_ms": 525,
+     "taxa_503": 0.0488
+    },
+    {
+     "hora": "19:00",
+     "usuarios": 60,
+     "p95_servico_ms": 122,
+     "taxa_503": 0.0
+    },
+    {
+     "hora": "20:00",
+     "usuarios": 55,
+     "p95_servico_ms": 122,
+     "taxa_503": 0.0
+    },
+    {
+     "hora": "21:00",
+     "usuarios": 55,
+     "p95_servico_ms": 123,
+     "taxa_503": 0.0
+    },
+    {
+     "hora": "22:00",
+     "usuarios": 53,
+     "p95_servico_ms": 122,
+     "taxa_503": 0.0
+    },
+    {
+     "hora": "23:00",
+     "usuarios": 51,
+     "p95_servico_ms": 127,
+     "taxa_503": 0.0
+    }
+   ],
+   "duracao_s": 22.3,
+   "pico_usuarios": 158
+  },
+  "antes_com_fila": {
+   "requisicoes": 1568,
+   "status": {
+    "200": 1566,
+    "erro_rede": 2
+   },
+   "taxa_503": 0.0,
+   "p50_servico_ms": 121,
+   "p95_servico_ms": 240,
+   "p50_total_ms": 606,
+   "p95_total_ms": 2149,
+   "p95_espera_fila_ms": 235,
+   "por_janela": [
+    {
+     "hora": "08:00",
+     "usuarios": 11,
+     "p95_servico_ms": 121,
+     "taxa_503": 0.0
+    },
+    {
+     "hora": "09:00",
+     "usuarios": 158,
+     "p95_servico_ms": 240,
+     "taxa_503": 0.0
+    },
+    {
+     "hora": "10:00",
+     "usuarios": 120,
+     "p95_servico_ms": 120,
+     "taxa_503": 0.0
+    },
+    {
+     "hora": "11:00",
+     "usuarios": 120,
+     "p95_servico_ms": 121,
+     "taxa_503": 0.0
+    },
+    {
+     "hora": "12:00",
+     "usuarios": 117,
+     "p95_servico_ms": 240,
+     "taxa_503": 0.0
+    },
+    {
+     "hora": "13:00",
+     "usuarios": 116,
+     "p95_servico_ms": 121,
+     "taxa_503": 0.0
+    },
+    {
+     "hora": "14:00",
+     "usuarios": 117,
+     "p95_servico_ms": 128,
+     "taxa_503": 0.0
+    },
+    {
+     "hora": "15:00",
+     "usuarios": 118,
+     "p95_servico_ms": 240,
+     "taxa_503": 0.0
+    },
+    {
+     "hora": "16:00",
+     "usuarios": 118,
+     "p95_servico_ms": 121,
+     "taxa_503": 0.0
+    },
+    {
+     "hora": "17:00",
+     "usuarios": 119,
+     "p95_servico_ms": 129,
+     "taxa_503": 0.0
+    },
+    {
+     "hora": "18:00",
+     "usuarios": 93,
+     "p95_servico_ms": 240,
+     "taxa_503": 0.0
+    },
+    {
+     "hora": "19:00",
+     "usuarios": 60,
+     "p95_servico_ms": 121,
+     "taxa_503": 0.0
+    },
+    {
+     "hora": "20:00",
+     "usuarios": 55,
+     "p95_servico_ms": 122,
+     "taxa_503": 0.0
+    },
+    {
+     "hora": "21:00",
+     "usuarios": 55,
+     "p95_servico_ms": 123,
+     "taxa_503": 0.0
+    },
+    {
+     "hora": "22:00",
+     "usuarios": 53,
+     "p95_servico_ms": 122,
+     "taxa_503": 0.0
+    },
+    {
+     "hora": "23:00",
+     "usuarios": 51,
+     "p95_servico_ms": 124,
+     "taxa_503": 0.0
+    }
+   ],
+   "duracao_s": 23.2,
+   "pico_usuarios": 158
+  },
+  "depois": {
+   "requisicoes": 1061,
+   "status": {
+    "200": 1061
+   },
+   "taxa_503": 0.0,
+   "p50_servico_ms": 123,
+   "p95_servico_ms": 240,
+   "p50_total_ms": 243,
+   "p95_total_ms": 652,
+   "p95_espera_fila_ms": 0,
+   "por_janela": [
+    {
+     "hora": "08:00",
+     "usuarios": 13,
+     "p95_servico_ms": 121,
+     "taxa_503": 0.0
+    },
+    {
+     "hora": "09:00",
+     "usuarios": 60,
+     "p95_servico_ms": 240,
+     "taxa_503": 0.0
+    },
+    {
+     "hora": "10:00",
+     "usuarios": 60,
+     "p95_servico_ms": 129,
+     "taxa_503": 0.0
+    },
+    {
+     "hora": "11:00",
+     "usuarios": 60,
+     "p95_servico_ms": 125,
+     "taxa_503": 0.0
+    },
+    {
+     "hora": "12:00",
+     "usuarios": 60,
+     "p95_servico_ms": 126,
+     "taxa_503": 0.0
+    },
+    {
+     "hora": "13:00",
+     "usuarios": 60,
+     "p95_servico_ms": 130,
+     "taxa_503": 0.0
+    },
+    {
+     "hora": "14:00",
+     "usuarios": 60,
+     "p95_servico_ms": 129,
+     "taxa_503": 0.0
+    },
+    {
+     "hora": "15:00",
+     "usuarios": 60,
+     "p95_servico_ms": 128,
+     "taxa_503": 0.0
+    },
+    {
+     "hora": "16:00",
+     "usuarios": 60,
+     "p95_servico_ms": 145,
+     "taxa_503": 0.0
+    },
+    {
+     "hora": "17:00",
+     "usuarios": 60,
+     "p95_servico_ms": 240,
+     "taxa_503": 0.0
+    },
+    {
+     "hora": "18:00",
+     "usuarios": 30,
+     "p95_servico_ms": 135,
+     "taxa_503": 0.0
+    },
+    {
+     "hora": "19:00",
+     "usuarios": 17,
+     "p95_servico_ms": 123,
+     "taxa_503": 0.0
+    },
+    {
+     "hora": "20:00",
+     "usuarios": 24,
+     "p95_servico_ms": 128,
+     "taxa_503": 0.0
+    },
+    {
+     "hora": "21:00",
+     "usuarios": 28,
+     "p95_servico_ms": 132,
+     "taxa_503": 0.0
+    },
+    {
+     "hora": "22:00",
+     "usuarios": 27,
+     "p95_servico_ms": 131,
+     "taxa_503": 0.0
+    },
+    {
+     "hora": "23:00",
+     "usuarios": 25,
+     "p95_servico_ms": 129,
+     "taxa_503": 0.0
+    }
+   ],
+   "duracao_s": 9.2,
+   "pico_usuarios": 60
+  },
+  "controle": {
+   "requisicoes": 608,
+   "status": {
+    "200": 608
+   },
+   "taxa_503": 0.0,
+   "p50_servico_ms": 121,
+   "p95_servico_ms": 122,
+   "p50_total_ms": 126,
+   "p95_total_ms": 146,
+   "p95_espera_fila_ms": 0,
+   "por_janela": [
+    {
+     "hora": "08:00",
+     "usuarios": 8,
+     "p95_servico_ms": 120,
+     "taxa_503": 0.0
+    },
+    {
+     "hora": "09:00",
+     "usuarios": 11,
+     "p95_servico_ms": 121,
+     "taxa_503": 0.0
+    },
+    {
+     "hora": "10:00",
+     "usuarios": 14,
+     "p95_servico_ms": 122,
+     "taxa_503": 0.0
+    },
+    {
+     "hora": "11:00",
+     "usuarios": 15,
+     "p95_servico_ms": 122,
+     "taxa_503": 0.0
+    },
+    {
+     "hora": "12:00",
+     "usuarios": 14,
+     "p95_servico_ms": 122,
+     "taxa_503": 0.0
+    },
+    {
+     "hora": "13:00",
+     "usuarios": 13,
+     "p95_servico_ms": 121,
+     "taxa_503": 0.0
+    },
+    {
+     "hora": "14:00",
+     "usuarios": 13,
+     "p95_servico_ms": 121,
+     "taxa_503": 0.0
+    },
+    {
+     "hora": "15:00",
+     "usuarios": 13,
+     "p95_servico_ms": 121,
+     "taxa_503": 0.0
+    },
+    {
+     "hora": "16:00",
+     "usuarios": 12,
+     "p95_servico_ms": 121,
+     "taxa_503": 0.0
+    },
+    {
+     "hora": "17:00",
+     "usuarios": 10,
+     "p95_servico_ms": 121,
+     "taxa_503": 0.0
+    },
+    {
+     "hora": "18:00",
+     "usuarios": 9,
+     "p95_servico_ms": 120,
+     "taxa_503": 0.0
+    },
+    {
+     "hora": "19:00",
+     "usuarios": 12,
+     "p95_servico_ms": 121,
+     "taxa_503": 0.0
+    },
+    {
+     "hora": "20:00",
+     "usuarios": 16,
+     "p95_servico_ms": 122,
+     "taxa_503": 0.0
+    },
+    {
+     "hora": "21:00",
+     "usuarios": 19,
+     "p95_servico_ms": 124,
+     "taxa_503": 0.0
+    },
+    {
+     "hora": "22:00",
+     "usuarios": 16,
+     "p95_servico_ms": 122,
+     "taxa_503": 0.0
+    },
+    {
+     "hora": "23:00",
+     "usuarios": 10,
+     "p95_servico_ms": 121,
+     "taxa_503": 0.0
+    }
+   ],
+   "duracao_s": 6.4,
+   "pico_usuarios": 19
+  }
+ }
+}

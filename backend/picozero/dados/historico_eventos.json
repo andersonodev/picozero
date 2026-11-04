@@ -1,0 +1,316 @@
+{
+  "fonte": "Eventos de semestres anteriores (MODELO): mesma estrutura do calendário 2026.2, usados para gerar e consultar o histórico",
+  "eventos": [
+    {
+      "data": "2025-08-04",
+      "hora_inicio": "08:00",
+      "hora_fim": "22:00",
+      "tipo": "outro",
+      "descricao": "Início do período letivo 2025.2 (veteranos)"
+    },
+    {
+      "data": "2025-08-10",
+      "hora_inicio": "00:00",
+      "hora_fim": "23:59",
+      "tipo": "vencimento",
+      "descricao": "Vencimento da 2ª parcela 2025.2"
+    },
+    {
+      "data": "2025-08-11",
+      "hora_inicio": "08:00",
+      "hora_fim": "22:00",
+      "tipo": "outro",
+      "descricao": "Início do período letivo 2025.2 (calouros)"
+    },
+    {
+      "data": "2025-09-10",
+      "hora_inicio": "00:00",
+      "hora_fim": "23:59",
+      "tipo": "vencimento",
+      "descricao": "Vencimento da 3ª parcela 2025.2"
+    },
+    {
+      "data": "2025-09-10",
+      "hora_inicio": "09:00",
+      "hora_fim": "18:00",
+      "tipo": "prova_online",
+      "descricao": "Aplicação do Teste de Progresso 2025.2",
+      "turmas": [
+        "ADM-1A",
+        "ADM-3A",
+        "ECO-1A",
+        "ENG-1A",
+        "DIR-1A",
+        "DIR-3A",
+        "RI-1A",
+        "CDC-1A"
+      ]
+    },
+    {
+      "data": "2025-09-11",
+      "hora_inicio": "09:00",
+      "hora_fim": "23:59",
+      "tipo": "rematricula",
+      "descricao": "Fim da renovação de matrícula online 2025.2"
+    },
+    {
+      "data": "2025-09-25",
+      "hora_inicio": "19:00",
+      "hora_fim": "21:00",
+      "tipo": "prova_online",
+      "descricao": "AP1 online 2025.2",
+      "turmas": [
+        "ADM-1A",
+        "ADM-1B",
+        "ECO-1A"
+      ]
+    },
+    {
+      "data": "2025-10-10",
+      "hora_inicio": "00:00",
+      "hora_fim": "23:59",
+      "tipo": "vencimento",
+      "descricao": "Vencimento da 4ª parcela 2025.2"
+    },
+    {
+      "data": "2025-10-14",
+      "hora_inicio": "14:00",
+      "hora_fim": "23:59",
+      "tipo": "notas",
+      "descricao": "Divulgação de notas da AP1 2025.2"
+    },
+    {
+      "data": "2025-11-10",
+      "hora_inicio": "00:00",
+      "hora_fim": "23:59",
+      "tipo": "vencimento",
+      "descricao": "Vencimento da 5ª parcela 2025.2"
+    },
+    {
+      "data": "2025-11-13",
+      "hora_inicio": "19:00",
+      "hora_fim": "21:00",
+      "tipo": "prova_online",
+      "descricao": "Abertura da AP2 online 2025.2",
+      "turmas": [
+        "ADM-2A",
+        "ADM-2B",
+        "ECO-2A",
+        "ENG-1A",
+        "ENG-2A",
+        "CDC-1A",
+        "DIR-2A",
+        "DIR-4A",
+        "RI-2A",
+        "RI-4A",
+        "CCO-1A"
+      ]
+    },
+    {
+      "data": "2025-11-13",
+      "hora_inicio": "21:00",
+      "hora_fim": "23:59",
+      "tipo": "notas",
+      "descricao": "Prazo final de notas da AC 2025.2"
+    },
+    {
+      "data": "2025-12-04",
+      "hora_inicio": "14:00",
+      "hora_fim": "23:59",
+      "tipo": "notas",
+      "descricao": "Divulgação de notas finais 2025.2"
+    },
+    {
+      "data": "2025-12-10",
+      "hora_inicio": "00:00",
+      "hora_fim": "23:59",
+      "tipo": "vencimento",
+      "descricao": "Vencimento da 6ª parcela 2025.2"
+    },
+    {
+      "data": "2026-01-19",
+      "hora_inicio": "09:00",
+      "hora_fim": "23:59",
+      "tipo": "rematricula",
+      "descricao": "Abertura da renovação de matrícula 2026.1"
+    },
+    {
+      "data": "2026-02-09",
+      "hora_inicio": "08:00",
+      "hora_fim": "22:00",
+      "tipo": "outro",
+      "descricao": "Início do período letivo 2026.1"
+    },
+    {
+      "data": "2026-02-10",
+      "hora_inicio": "00:00",
+      "hora_fim": "23:59",
+      "tipo": "vencimento",
+      "descricao": "Vencimento da 1ª parcela 2026.1"
+    },
+    {
+      "data": "2026-03-10",
+      "hora_inicio": "00:00",
+      "hora_fim": "23:59",
+      "tipo": "vencimento",
+      "descricao": "Vencimento da 2ª parcela 2026.1"
+    },
+    {
+      "data": "2026-03-31",
+      "hora_inicio": "09:00",
+      "hora_fim": "18:00",
+      "tipo": "rematricula",
+      "descricao": "Fim dos prazos de ajuste de disciplinas 2026.1"
+    },
+    {
+      "data": "2026-04-06",
+      "hora_inicio": "14:00",
+      "hora_fim": "23:59",
+      "tipo": "notas",
+      "descricao": "Divulgação das notas da AV1 2026.1"
+    },
+    {
+      "data": "2026-04-10",
+      "hora_inicio": "00:00",
+      "hora_fim": "23:59",
+      "tipo": "vencimento",
+      "descricao": "Vencimento da 3ª parcela 2026.1"
+    },
+    {
+      "data": "2026-05-10",
+      "hora_inicio": "00:00",
+      "hora_fim": "23:59",
+      "tipo": "vencimento",
+      "descricao": "Vencimento da 4ª parcela 2026.1"
+    },
+    {
+      "data": "2026-05-12",
+      "hora_inicio": "19:00",
+      "hora_fim": "21:00",
+      "tipo": "prova_online",
+      "descricao": "Abertura da AP2 online 2026.1",
+      "turmas": [
+        "ADM-2A",
+        "ADM-2B",
+        "ECO-2A",
+        "ENG-1A",
+        "ENG-1B",
+        "ENG-2A",
+        "CDC-1A",
+        "DIR-2A",
+        "DIR-4A",
+        "RI-2A",
+        "RI-4A",
+        "CCO-1A"
+      ]
+    },
+    {
+      "data": "2026-05-13",
+      "hora_inicio": "14:00",
+      "hora_fim": "23:59",
+      "tipo": "notas",
+      "descricao": "Divulgação de notas da AP1 2026.1"
+    },
+    {
+      "data": "2026-06-10",
+      "hora_inicio": "00:00",
+      "hora_fim": "23:59",
+      "tipo": "vencimento",
+      "descricao": "Vencimento da 5ª parcela 2026.1"
+    },
+    {
+      "data": "2026-06-15",
+      "hora_inicio": "09:00",
+      "hora_fim": "23:59",
+      "tipo": "rematricula",
+      "descricao": "Abertura da rematrícula 2026.2"
+    },
+    {
+      "data": "2026-07-03",
+      "hora_inicio": "14:00",
+      "hora_fim": "23:59",
+      "tipo": "notas",
+      "descricao": "Divulgação das notas finais 2026.1"
+    },
+    {
+      "data": "2026-07-10",
+      "hora_inicio": "00:00",
+      "hora_fim": "23:59",
+      "tipo": "vencimento",
+      "descricao": "Vencimento da 6ª parcela 2026.1"
+    }
+  ],
+  "incidentes": [
+    {
+      "data": "2026-05-12",
+      "inicio": "19:00",
+      "fim": "19:45",
+      "fator": 1.35,
+      "nota": "surto acima do esperado na abertura da AP2 (recarregamentos)"
+    },
+    {
+      "data": "2026-03-10",
+      "inicio": "22:15",
+      "fim": "22:45",
+      "fator": 0.25,
+      "nota": "queda parcial do portal; rebote às 22h45"
+    },
+    {
+      "data": "2026-03-10",
+      "inicio": "22:45",
+      "fim": "23:15",
+      "fator": 1.4,
+      "nota": "rebote após a queda"
+    }
+  ],
+  "marcos": [
+    {
+      "inicio": "2025-08-04",
+      "fim": "2025-09-11",
+      "nome": "Renovação de matrícula online 2025.2",
+      "tipo": "rematricula"
+    },
+    {
+      "inicio": "2025-09-25",
+      "fim": "2025-10-01",
+      "nome": "Avaliações Parciais AP1 2025.2",
+      "tipo": "prova_online"
+    },
+    {
+      "inicio": "2025-11-13",
+      "fim": "2025-11-19",
+      "nome": "Avaliações Parciais AP2 2025.2",
+      "tipo": "prova_online"
+    },
+    {
+      "inicio": "2025-11-26",
+      "fim": "2025-12-04",
+      "nome": "Avaliações Substitutivas AS 2025.2",
+      "tipo": "prova_online"
+    },
+    {
+      "inicio": "2026-01-19",
+      "fim": "2026-02-27",
+      "nome": "Renovação de matrícula online 2026.1",
+      "tipo": "rematricula"
+    },
+    {
+      "inicio": "2026-03-30",
+      "fim": "2026-04-06",
+      "nome": "Avaliações Parciais AP1 2026.1",
+      "tipo": "prova_online"
+    },
+    {
+      "inicio": "2026-05-12",
+      "fim": "2026-05-18",
+      "nome": "Avaliações Parciais AP2 2026.1",
+      "tipo": "prova_online"
+    },
+    {
+      "inicio": "2026-06-15",
+      "fim": "2026-07-03",
+      "nome": "Abertura da renovação 2026.2 e substitutivas",
+      "tipo": "rematricula"
+    }
+  ]
+}

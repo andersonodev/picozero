@@ -1,32 +1,33 @@
 // frontend/src/tema.js
 // O tema vive numa classe (.tema-escuro) no <html>. Recharts precisa de hex,
 // então os tokens de gráfico são resolvidos aqui a partir do tema ativo.
+// Paleta: identidade Yduqs (navy #12284C, teal #00ADBB, cinza #F2F2F2).
 import { useEffect, useState } from 'react'
 
 const CLARO = {
   superficie: '#ffffff',
-  texto: '#0b1220',
-  texto2: '#566072',
-  mudo: '#8893a3',
-  grade: '#e7ebf1',
-  serie1: '#2a78d6',
-  serie2: '#eb6834',
-  serie3: '#1baf7a',
-  critico: '#d03b3b',
-  bom: '#0ca30c',
+  texto: '#12284c',
+  texto2: '#5a6578',
+  mudo: '#8b95a5',
+  grade: '#ebeef2',
+  semPlano: '#e5792e',
+  comPlano: '#00adbb',
+  controle: '#8b95a5',
+  critico: '#d64541',
+  ok: '#1e9e6a',
 }
 
 const ESCURO = {
-  superficie: '#12161d',
-  texto: '#eef2f7',
-  texto2: '#9aa5b4',
-  mudo: '#6b7686',
-  grade: '#20262f',
-  serie1: '#4f97ec',
-  serie2: '#ec7a4b',
-  serie3: '#2bc08a',
-  critico: '#e05a5a',
-  bom: '#2bbf2b',
+  superficie: '#0f1e36',
+  texto: '#eef3fa',
+  texto2: '#a3b1c6',
+  mudo: '#71839e',
+  grade: '#1c3050',
+  semPlano: '#f08a45',
+  comPlano: '#2cc3cf',
+  controle: '#8798b3',
+  critico: '#ef5f5a',
+  ok: '#34c285',
 }
 
 export function temaEscuroAtivo() {
@@ -43,8 +44,23 @@ export function useTema() {
   return escuro ? ESCURO : CLARO
 }
 
+// Gravidade escrita pelo Gemini (1–5).
 export function nivelDaGravidade(g) {
   if (g >= 4) return { chave: 'critico', rotulo: 'crítico' }
-  if (g === 3) return { chave: 'serio', rotulo: 'alto' }
-  return { chave: 'alerta', rotulo: 'atenção' }
+  if (g === 3) return { chave: 'alto', rotulo: 'alto' }
+  return { chave: 'atencao', rotulo: 'atenção' }
+}
+
+// Situação da carga calculada pelo código em relação à capacidade.
+export function situacaoDaCarga(pico, cap) {
+  if (pico > cap) return { chave: 'critico', rotulo: 'acima da capacidade' }
+  if (pico >= cap * 0.85) return { chave: 'alto', rotulo: 'perto do limite' }
+  if (pico >= cap * 0.65) return { chave: 'atencao', rotulo: 'atenção' }
+  return { chave: 'folga', rotulo: 'com folga' }
+}
+
+// Cor de cada tipo de evento do calendário (tokens --ev-* no CSS).
+const TIPOS_COM_COR = ['prova_online', 'vencimento', 'notas', 'rematricula', 'outro']
+export function corDoTipo(tipo) {
+  return `var(--ev-${TIPOS_COM_COR.includes(tipo) ? tipo : 'outro'})`
 }
