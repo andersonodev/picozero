@@ -99,3 +99,19 @@ def test_mcp_por_http(cliente):
         "jsonrpc": "2.0", "id": 3, "method": "tools/call", "params": {"name": "previsao_dia", "arguments": {"data": "2026-11-12"}},
     })
     assert chamada.status_code == 200 and "1" in str(chamada.json()["result"])
+
+
+def test_conversas_salvas_no_servidor(cliente):
+    mensagens = [
+        {"papel": "usuario", "texto": "Qual o pior dia?"},
+        {"papel": "assistente", "texto": "10/09 às 09:00.", "origem": "regras", "ferramentas": []},
+    ]
+    r = cliente.put("/api/conversas/conversa-teste-1", json={"unidade": "sp", "mensagens": mensagens})
+    assert r.status_code == 200 and r.json()["titulo"] == "Qual o pior dia?"
+    lista = cliente.get("/api/conversas").json()
+    assert lista[0]["id"] == "conversa-teste-1" and lista[0]["mensagens"] == 2 and lista[0]["unidade"] == "sp"
+    aberta = cliente.get("/api/conversas/conversa-teste-1").json()
+    assert aberta["mensagens"][1]["origem"] == "regras"  # campos extras do painel voltam como foram salvos
+    assert cliente.put("/api/conversas/x", json={"mensagens": []}).status_code == 422  # id curto demais
+    assert cliente.delete("/api/conversas/conversa-teste-1").json() == {"apagada": True}
+    assert cliente.get("/api/conversas/conversa-teste-1").status_code == 404

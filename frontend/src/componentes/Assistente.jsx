@@ -14,6 +14,7 @@ import {
   Copy,
   ExternalLink,
   Gauge,
+  History,
   SquarePen,
   TrendingUp,
   TriangleAlert,
@@ -37,6 +38,29 @@ const RACIOCINIOS = [
   { valor: 'high', rotulo: 'Profundo' },
 ]
 const CHAVE_RACIOCINIO = 'picozero.raciocinio'
+// Conversas salvas no servidor (usuário global). A atual fica lembrada no navegador para reabrir ao recarregar.
+const CHAVE_CONVERSA = 'picozero.conversa'
+function novoIdConversa() {
+  const aleatorio = globalThis.crypto?.randomUUID?.() || `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`
+  return `c-${aleatorio}`
+}
+function guardarConversa(id) {
+  try {
+    localStorage.setItem(CHAVE_CONVERSA, id)
+  } catch {
+    /* sem armazenamento local: vale só nesta aba */
+  }
+  return id
+}
+function lerConversa() {
+  try {
+    const v = localStorage.getItem(CHAVE_CONVERSA)
+    if (v && /^[A-Za-z0-9_-]{8,64}$/.test(v)) return v
+  } catch {
+    /* sem armazenamento local */
+  }
+  return guardarConversa(novoIdConversa())
+}
 function lerRaciocinio() {
   try {
     const v = localStorage.getItem(CHAVE_RACIOCINIO)
@@ -83,6 +107,34 @@ function montarHistorico(lista) {
     .map((m) => ({ papel: m.papel, texto: m.texto.slice(0, MAX_TEXTO) }))
   while (hist.length && hist[0].papel !== 'usuario') hist.shift()
   return hist
+}
+
+// ---------- Conversas salvas ----------
+
+async function salvarConversaApi(id, unidade, lista) {
+  const mensagens = lista
+    .filter((m) => !m.aviso && !m.falhou && m.texto)
+    .map(({ id: _id, ...m }) => m) // eslint-disable-line no-unused-vars
+  if (!mensagens.length) return
+  try {
+    await fetch(`${API}/api/conversas/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ unidade, mensagens }),
+    })
+  } catch {
+    /* sem backend: a conversa fica só nesta aba */
+  }
+}
+
+async function lerJson(caminho) {
+  try {
+    const res = await fetch(`${API}${caminho}`, { headers: { Accept: 'application/json' } })
+    if (!res.ok || !(res.headers.get('content-type') || '').includes('json')) return null
+    return await res.json()
+  } catch {
+    return null
+  }
 }
 
 // O backend responde? (/api/saude em até 3 s). Distingue "desligado" de "ligado, mas falhou".
@@ -323,6 +375,41 @@ function Avatar({ tamanho = 'p' }) {
   )
 }
 
+function quando(iso) {
+  const [d = '', h = ''] = String(iso || '').split('T')
+  const [, m, dia] = d.split('-')
+  return dia && m ? `${dia}/${m} ${h.slice(0, 5)}` : ''
+}
+
+function Historico({ salvas, atual, aoAbrir }) {
+  if (salvas === null) return <p className="chat-historico-vazio">Carregando conversas salvas…</p>
+  if (!salvas.length) {
+    return (
+      <p className="chat-historico-vazio">
+        Nenhuma conversa salva ainda. Cada resposta do assistente salva a conversa no servidor.
+      </p>
+    )
+  }
+  return (
+    <div className="chat-historico">
+      <p className="chat-historico-tit">Conversas salvas</p>
+      {salvas.map((c) => (
+        <button
+          key={c.id}
+          type="button"
+          className={`chat-historico-item${c.id === atual ? ' atual' : ''}`}
+          onClick={() => aoAbrir(c.id)}
+        >
+          <span className="chat-historico-titulo">{c.titulo}</span>
+          <small>
+            {quando(c.atualizada_em)} · {c.mensagens} mensagens · {String(c.unidade || '').toUpperCase()}
+          </small>
+        </button>
+      ))}
+    </div>
+  )
+}
+
 function Vazio({ aoEscolher }) {
   return (
     <div className="chat-vazio">
@@ -476,6 +563,10 @@ export default function Assistente({ aberto, aoFechar, unidade = 'rj', irParaDia
   const [rascunho, setRascunho] = useState('')
   const [carregando, setCarregando] = useState(false)
   const [raciocinio, setRaciocinio] = useState(lerRaciocinio)
+  const [conversaId, setConversaId] = useState(lerConversa)
+  const [historicoAberto, setHistoricoAberto] = useState(false)
+  const [salvas, setSalvas] = useState(null)
+  const jaSalvasRef = useRef(0) // quantas mensagens da conversa atual já estão no servidor
   const idRaciocinio = useId()
   const painelRef = useRef(null)
   const rolagemRef = useRef(null)
@@ -483,6 +574,31 @@ export default function Assistente({ aberto, aoFechar, unidade = 'rj', irParaDia
   const pedidoRef = useRef(null) // AbortController da pergunta em andamento
   const geracaoRef = useRef(0) // muda em "Nova conversa": respostas atrasadas são descartadas
   const ocupadoRef = useRef(false)
+
+  // Ao montar, reabre a conversa salva: o histórico volta e segue como contexto das próximas perguntas.
+  useEffect(() => {
+    let vivo = true
+    lerJson(`/api/conversas/${conversaId}`).then((d) => {
+      if (!vivo || !Array.isArray(d?.mensagens) || !d.mensagens.length) return
+      setMensagens((atual) => {
+        if (atual.length) return atual
+        jaSalvasRef.current = d.mensagens.length
+        return d.mensagens.map((m) => ({ ...m, id: novoId() }))
+      })
+    })
+    return () => {
+      vivo = false
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Depois de cada resposta, a conversa inteira vai para o servidor.
+  useEffect(() => {
+    if (carregando || !mensagens.length || mensagens.length === jaSalvasRef.current) return
+    if (mensagens[mensagens.length - 1].papel !== 'assistente') return
+    jaSalvasRef.current = mensagens.length
+    salvarConversaApi(conversaId, unidade || 'rj', mensagens)
+  }, [mensagens, carregando, conversaId, unidade])
 
   // Ao abrir, foco no campo; ao fechar, o foco volta para quem abriu.
   useEffect(() => {
@@ -600,7 +716,35 @@ export default function Assistente({ aberto, aoFechar, unidade = 'rj', irParaDia
     setMensagens([])
     setCarregando(false)
     setRascunho('')
+    setConversaId(guardarConversa(novoIdConversa()))
+    jaSalvasRef.current = 0
+    setHistoricoAberto(false)
     campoRef.current?.focus()
+  }
+
+  async function abrirConversa(id) {
+    const d = await lerJson(`/api/conversas/${id}`)
+    if (!Array.isArray(d?.mensagens)) return
+    geracaoRef.current += 1
+    pedidoRef.current?.abort()
+    pedidoRef.current = null
+    ocupadoRef.current = false
+    setCarregando(false)
+    jaSalvasRef.current = d.mensagens.length
+    setConversaId(guardarConversa(id))
+    setMensagens(d.mensagens.map((m) => ({ ...m, id: novoId() })))
+    setHistoricoAberto(false)
+  }
+
+  async function alternarHistorico() {
+    if (historicoAberto) {
+      setHistoricoAberto(false)
+      return
+    }
+    setHistoricoAberto(true)
+    setSalvas(null)
+    const lista = await lerJson('/api/conversas?limite=50')
+    setSalvas(Array.isArray(lista) ? lista : [])
   }
 
   function tentarDeNovo(aviso) {
@@ -655,6 +799,16 @@ export default function Assistente({ aberto, aoFechar, unidade = 'rj', irParaDia
           )}
           <button
             type="button"
+            className={`chat-icone${historicoAberto ? ' ativo' : ''}`}
+            onClick={alternarHistorico}
+            aria-label="Conversas salvas"
+            aria-pressed={historicoAberto}
+            title="Conversas salvas"
+          >
+            <History size={16} strokeWidth={1.9} aria-hidden="true" />
+          </button>
+          <button
+            type="button"
             className="chat-icone"
             onClick={novaConversa}
             disabled={vazio}
@@ -670,24 +824,30 @@ export default function Assistente({ aberto, aoFechar, unidade = 'rj', irParaDia
       </header>
 
       <div ref={rolagemRef} className="chat-rolagem">
-        {vazio && <Vazio aoEscolher={escolherSugestao} />}
-        <div className="chat-mensagens" role="log" aria-live="polite" aria-busy={carregando}>
-          {mensagens.map((m) => {
-            if (m.papel === 'usuario') return <MensagemUsuario key={m.id} texto={m.texto} />
-            if (m.aviso) {
-              return (
-                <Aviso
-                  key={m.id}
-                  texto={m.texto}
-                  aoRepetir={m === ultima && m.repetir ? () => tentarDeNovo(m) : null}
-                  desabilitado={carregando}
-                />
-              )
-            }
-            return <MensagemAssistente key={m.id} m={m} aoClicarData={aoClicarData} />
-          })}
-          {carregando && <Digitando />}
-        </div>
+        {historicoAberto ? (
+          <Historico salvas={salvas} atual={conversaId} aoAbrir={abrirConversa} />
+        ) : (
+          <>
+            {vazio && <Vazio aoEscolher={escolherSugestao} />}
+            <div className="chat-mensagens" role="log" aria-live="polite" aria-busy={carregando}>
+              {mensagens.map((m) => {
+                if (m.papel === 'usuario') return <MensagemUsuario key={m.id} texto={m.texto} />
+                if (m.aviso) {
+                  return (
+                    <Aviso
+                      key={m.id}
+                      texto={m.texto}
+                      aoRepetir={m === ultima && m.repetir ? () => tentarDeNovo(m) : null}
+                      desabilitado={carregando}
+                    />
+                  )
+                }
+                return <MensagemAssistente key={m.id} m={m} aoClicarData={aoClicarData} />
+              })}
+              {carregando && <Digitando />}
+            </div>
+          </>
+        )}
       </div>
 
       <form

@@ -15,6 +15,7 @@ services:
     env_file: picozero.env  # gerado pelo publicar.sh a partir do backend/.env; nunca vai para o Git
     environment:
       PICOZERO_DB: /data/picozero.db
+      TZ: America/Sao_Paulo  # horários da trilha e das conversas salvas no fuso do painel
     volumes:
       - dados:/data
     mem_limit: 512m

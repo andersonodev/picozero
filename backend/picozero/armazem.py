@@ -29,6 +29,10 @@ CREATE TABLE IF NOT EXISTS alertas (
 );
 CREATE TABLE IF NOT EXISTS trilha (seq INTEGER PRIMARY KEY AUTOINCREMENT, corpo TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS kv (chave TEXT PRIMARY KEY, valor TEXT NOT NULL, atualizado_em TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS conversas (
+    id TEXT PRIMARY KEY, titulo TEXT NOT NULL, unidade TEXT NOT NULL,
+    criada_em TEXT NOT NULL, atualizada_em TEXT NOT NULL, corpo TEXT NOT NULL
+);
 """
 
 
@@ -215,6 +219,39 @@ class Armazem:
     def trilha(self, limite: int = 120) -> list[RegistroTrilha]:
         rows = self._consulta("SELECT corpo FROM trilha ORDER BY seq DESC LIMIT ?", (limite,))
         return [RegistroTrilha.model_validate_json(r[0]) for r in reversed(rows)]
+
+    # ---------- conversas do assistente (usuário global: o painel não tem login) ----------
+
+    def salvar_conversa(self, id_: str, titulo: str, unidade: str, mensagens: list[dict]) -> None:
+        agora = datetime.now().isoformat(timespec="seconds")
+        self._exec(
+            "INSERT INTO conversas (id, titulo, unidade, criada_em, atualizada_em, corpo) VALUES (?,?,?,?,?,?) "
+            "ON CONFLICT (id) DO UPDATE SET titulo=excluded.titulo, unidade=excluded.unidade, "
+            "atualizada_em=excluded.atualizada_em, corpo=excluded.corpo",
+            (id_, titulo, unidade, agora, agora, json.dumps(mensagens, ensure_ascii=False, default=str)),
+        )
+
+    def conversa(self, id_: str) -> dict | None:
+        rows = self._consulta(
+            "SELECT id, titulo, unidade, criada_em, atualizada_em, corpo FROM conversas WHERE id=?", (id_,)
+        )
+        if not rows:
+            return None
+        i, titulo, unidade, criada, atualizada, corpo = rows[0]
+        return {"id": i, "titulo": titulo, "unidade": unidade, "criada_em": criada, "atualizada_em": atualizada,
+                "mensagens": json.loads(corpo)}
+
+    def conversas(self, limite: int = 50) -> list[dict]:
+        rows = self._consulta(
+            "SELECT id, titulo, unidade, criada_em, atualizada_em, json_array_length(corpo) FROM conversas "
+            "ORDER BY atualizada_em DESC LIMIT ?",
+            (limite,),
+        )
+        return [{"id": i, "titulo": t, "unidade": u, "criada_em": c, "atualizada_em": a, "mensagens": n}
+                for i, t, u, c, a, n in rows]
+
+    def apagar_conversa(self, id_: str) -> bool:
+        return self._exec("DELETE FROM conversas WHERE id=?", (id_,)).rowcount > 0
 
     # ---------- chave/valor (resultados de IA, cache) ----------
 
