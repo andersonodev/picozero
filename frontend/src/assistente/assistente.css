@@ -1,5 +1,5 @@
 /* frontend/src/assistente/assistente.css
-   Assistente PicoZero: gaveta de chat à direita (layout inspirado no LibreChat).
+   Assistente PicoZero: gaveta de chat à direita.
    Só usa as variáveis do estilo.css, então o tema escuro (.tema-escuro no <html>) vale sozinho.
    Prefixo .chat- para não colidir com as classes das telas. */
 

@@ -113,12 +113,12 @@ uv run pytest
 
 ## Servidor MCP
 
-Agentes (Claude, Gemini CLI, Cursor) podem consultar a previsão e enviar dados pelo MCP. As ferramentas são as mesmas da API: `previsao_dia`, `proximos_picos`, `alertas`, `dias_de_risco`, `ingerir_metricas`, `ingerir_arquivo`, `perguntar` e outras.
+Agentes (Gemini CLI, Cursor e outros clientes MCP) podem consultar a previsão e enviar dados pelo MCP. As ferramentas são as mesmas da API: `previsao_dia`, `proximos_picos`, `alertas`, `dias_de_risco`, `ingerir_metricas`, `ingerir_arquivo`, `perguntar` e outras.
 
 Com o backend rodando, pelo HTTP:
 
 ```bash
-claude mcp add --transport http picozero http://127.0.0.1:8000/mcp
+gemini mcp add --transport http picozero http://127.0.0.1:8000/mcp
 ```
 
 Ou por stdio, sem subir a API:

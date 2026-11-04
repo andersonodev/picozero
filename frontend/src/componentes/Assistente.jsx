@@ -1,5 +1,5 @@
 // frontend/src/componentes/Assistente.jsx
-// Assistente PicoZero: gaveta de chat à direita (layout inspirado no LibreChat).
+// Assistente PicoZero: gaveta de chat à direita.
 // Pergunta ao POST /api/chat (Gemini com as ferramentas do motor ou, sem chave, regras do backend).
 // Sem backend (prévia estática, rede fora, timeout, HTML no lugar de JSON) responde com
 // assistente/regras.js sobre os dados da prévia. O texto do modelo nunca vira HTML: o markdown
@@ -791,8 +791,8 @@ export default function Assistente({ aberto, aoFechar, unidade = 'rj', irParaDia
               href={LIBRECHAT}
               target="_blank"
               rel="noopener noreferrer"
-              aria-label="Abrir no LibreChat (nova aba)"
-              title="Abrir no LibreChat"
+              aria-label="Abrir o chat em tela cheia (nova aba)"
+              title="Abrir o chat em tela cheia"
             >
               <ExternalLink size={16} strokeWidth={1.9} aria-hidden="true" />
             </a>

@@ -175,14 +175,14 @@ export default function Entrada({ unidade }) {
           <div className="card-cab">
             <div>
               <h2><Cable size={16} aria-hidden="true" /> Conectar por MCP</h2>
-              <p>Claude, Gemini CLI, Cursor ou LibreChat consultam o motor e enviam dados pelo protocolo</p>
+              <p>Gemini CLI, Cursor ou qualquer cliente MCP consulta o motor e envia dados pelo protocolo</p>
             </div>
           </div>
           <div className="card-corpo">
             <p style={{ margin: 0, fontSize: 13 }}>Endereço (streamable HTTP, sem estado):</p>
             <pre className="mono" style={{ margin: '6px 0 10px', padding: 10, borderRadius: 8, background: 'var(--superficie-2)', overflowX: 'auto', fontSize: 12.5 }}>{`${base}/mcp`}</pre>
-            <p style={{ margin: 0, fontSize: 13 }}>LibreChat (librechat.yaml):</p>
-            <pre className="mono" style={{ margin: '6px 0 10px', padding: 10, borderRadius: 8, background: 'var(--superficie-2)', overflowX: 'auto', fontSize: 12.5 }}>{`mcpServers:\n  picozero:\n    type: streamable-http\n    url: ${base}/mcp`}</pre>
+            <p style={{ margin: 0, fontSize: 13 }}>Gemini CLI:</p>
+            <pre className="mono" style={{ margin: '6px 0 10px', padding: 10, borderRadius: 8, background: 'var(--superficie-2)', overflowX: 'auto', fontSize: 12.5 }}>{`gemini mcp add --transport http picozero ${base}/mcp`}</pre>
             <p style={{ margin: 0, fontSize: 13, color: 'var(--texto-2)' }}>{FERRAMENTAS_MCP.length} ferramentas: {FERRAMENTAS_MCP.join(', ')}.</p>
           </div>
         </section>

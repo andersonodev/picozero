@@ -61,8 +61,8 @@ O formato é detectado pelo conteúdo. Colunas desconhecidas vão ao Gemini (`ma
 
 ## MCP
 
-- **HTTP (stateless, JSON):** `https://frontend-delta-seven-37.vercel.app/mcp`. No LibreChat use `type: streamable-http`.
-- **stdio** (Claude Desktop, Claude Code, Gemini CLI):
+- **HTTP (stateless, JSON):** `https://picozeroday.vercel.app/mcp`. Em clientes que pedem o tipo, use `streamable-http`.
+- **stdio** (Gemini CLI, Cursor e outros clientes MCP):
   ```json
   { "mcpServers": { "picozero": { "command": "uv", "args": ["--directory", "/caminho/para/backend", "run", "python", "-m", "picozero.mcp_servidor"] } } }
   ```

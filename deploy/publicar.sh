@@ -20,7 +20,7 @@ echo "1/5 build do painel (botão do LibreChat: $VITE_LIBRECHAT_URL)"
 echo "2/5 envio do código"
 COPYFILE_DISABLE=1 tar --no-mac-metadata --no-xattrs --exclude='__pycache__' -czf - \
   requirements.txt backend/picozero frontend/dist \
-  deploy/compose.yaml deploy/Dockerfile deploy/Dockerfile.dockerignore deploy/nginx.conf deploy/librechat/librechat.yaml deploy/librechat/Dockerfile deploy/librechat/marca deploy/librechat/chat-entrar.html \
+  deploy/compose.yaml deploy/Dockerfile deploy/Dockerfile.dockerignore deploy/nginx.conf deploy/librechat/librechat.yaml deploy/librechat/Dockerfile deploy/librechat/marca deploy/librechat/aplicar-marca.js deploy/librechat/chat-entrar.html \
   | ssh_srv "mkdir -p $DESTINO && cd $DESTINO && rm -rf backend/picozero frontend/dist && tar --warning=no-unknown-keyword -xzf - && cp deploy/librechat/librechat.yaml deploy/librechat.yaml"
 
 echo "3/5 envio das credenciais (backend/.env -> $DESTINO/deploy/picozero.env, modo 600)"
@@ -64,7 +64,8 @@ if [ ! -f convidado.env ]; then
 fi
 . ./convidado.env
 # Conta compartilhada: cadastro fechado e sem limites por conta/IP que travariam todos juntos.
-for par in ALLOW_REGISTRATION=false LOGIN_MAX=1000 LIMIT_CONCURRENT_MESSAGES=false LIMIT_MESSAGE_IP=false BAN_VIOLATIONS=false; do
+# Rodapé vazio e sem o link "Ajuda e FAQ" (librechat.ai): o chat aparece só como PicoZero.
+for par in ALLOW_REGISTRATION=false LOGIN_MAX=1000 LIMIT_CONCURRENT_MESSAGES=false LIMIT_MESSAGE_IP=false BAN_VIOLATIONS=false CUSTOM_FOOTER= HELP_AND_FAQ_URL=/; do
   chave=${par%%=*}
   if grep -q "^$chave=" librechat.env; then sed -i "s|^$chave=.*|$par|" librechat.env; else echo "$par" >> librechat.env; fi
 done

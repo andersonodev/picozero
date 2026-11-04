@@ -1,5 +1,5 @@
 # backend/picozero/mcp_servidor.py
-# Servidor MCP do PicoZero: qualquer agente (Claude, Gemini CLI, Cursor, um bot do APM) consulta a
+# Servidor MCP do PicoZero: qualquer agente (Gemini CLI, Cursor, um bot do APM) consulta a
 # previsão e EMPURRA dados pelo protocolo — métricas ao vivo, eventos, texto, arquivos e tráfego público.
 # Mesmo motor da API HTTP. Transportes: HTTP em /mcp (montado na API) e stdio (python -m picozero.mcp_servidor).
 import base64
